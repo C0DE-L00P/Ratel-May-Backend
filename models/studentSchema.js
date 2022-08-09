@@ -7,7 +7,7 @@ const studentSchema = new Schema({
   age: { type: Number, required: [true, "You must put an age"] },
   gender: { type: String, required: true, enum: ["Male", "Female"] },
   state: { type: String, required: true },
-  mobile: String,
+  mobile: { type: String, required: true },
   email: { type: String, required: [true, "You must put an email"] },
   password: { type: String, required: true },
   notes_in_book: [
