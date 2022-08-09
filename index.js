@@ -7,14 +7,13 @@ const cors = require("cors");
 const helmet = require("helmet");
 const Session = require("./models/sessionSchema");
 
-
 const PORT = process.env.PORT || 5000;
 //open the server
 
 server.listen(PORT, () => console.log(`Server is running on port ${PORT}`));
 
 //mongo Connection
-const url = process.env.DB_API_KEY;
+const url = 'mongodb+srv://mohamedgamal:12346789iO@atlascluster.rx9esaf.mongodb.net/?retryWrites=true&w=majority';
 const connectionParams = {
   useNewUrlParser: true,
   useUnifiedTopology: true,
