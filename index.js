@@ -7,7 +7,7 @@ const cors = require("cors");
 const helmet = require("helmet");
 const Session = require("./models/sessionSchema");
 
-const PORT = process.env.SERVER_PORT || 5000;
+const PORT = process.env.PORT || 5000;
 const HOST = "0.0.0.0"
 
 //mongo Connection
