@@ -8,9 +8,7 @@ const helmet = require("helmet");
 const Session = require("./models/sessionSchema");
 
 const PORT = process.env.SERVER_PORT || 5000;
-//open the server
-
-server.listen(PORT, () => console.log(`Server is running on port ${PORT}`));
+const HOST = "0.0.0.0"
 
 //mongo Connection
 const url = process.env.DB_API_KEY;
@@ -26,6 +24,10 @@ mongoose
     )
   )
   .catch((err) => console.error(`Error DB. ${err}`));
+
+//open the server
+
+server.listen(PORT,HOST, () => console.log(`Server is running on port ${PORT}`));
 
 //TODO: change origin here to another 
 const io = require("socket.io")(server, {
