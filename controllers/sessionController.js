@@ -15,7 +15,7 @@ const sessions_get_id = (mreq, mres) => {
       privilages: 1,
       is_available: 1,
     })
-    .populate("participants", {
+    .populate("currently_inside", {
       name: 1,
       email: 1,
       _id: 1,
@@ -76,7 +76,7 @@ const sessions_post = (mreq, mres) => {
 
 const sessions_get = (mreq, mres) => {
   Session.find()
-    .populate("participants", {
+    .populate("currently_inside", {
       name: 1,
       email: 1,
       _id: 1,

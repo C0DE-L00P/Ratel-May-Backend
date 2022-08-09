@@ -15,7 +15,7 @@ const feedbacks_get_id = (mreq, mres) => {
       privilages: 1,
       is_available: 1,
     })
-    .populate("participants", {
+    .populate("currently_inside", {
       name: 1,
       email: 1,
       _id: 1,
