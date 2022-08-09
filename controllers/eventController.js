@@ -1,5 +1,6 @@
 const Event = require("../models/eventSchema");
 const fs = require("fs");
+require("dotenv").config();
 
 // -------------------- IDS
 
@@ -27,8 +28,8 @@ const events_put_id = (mreq, mres) => {
         updatedItem.article_img != undefined
       )
         deleteFile(docs._doc.article_img, mres);
-
-      mres.status(200).json(updatedItem);
+        
+      mres.status(200).json(updatedItem)
     } catch (error) {
       mres.status(400).json({ message: error });
     }
@@ -38,13 +39,13 @@ const events_put_id = (mreq, mres) => {
 const events_delete_id = (mreq, mres) => {
   Event.findByIdAndDelete(mreq.params.id, function (err, docs) {
     try {
-      if (err) mres.sendStatus(404);
+      if (err) return mres.sendStatus(404);
       else {
-        deleteFile(docs._doc.article_img, mres);
-        mres.sendStatus(200);
+        const success = deleteFile(docs._doc.article_img, mres);
+        return success ? mres.sendStatus(200) : mres.sendStatus(501);
       }
     } catch (error) {
-      mres.status(400).json({ message: error });
+      return mres.status(400).json({ message: error });
     }
   });
 };
@@ -53,9 +54,10 @@ const events_delete_id = (mreq, mres) => {
 
 const events_post = (mreq, mres) => {
   //Save the data in the database
-  //TODO: check how frontend side would work with this img url as it sends public ex: "public/assets/events/1659927351441.webp",
   if (mreq.file != undefined)
-    mreq.body.article_img = mreq.file.path.replaceAll("\\", "/");
+    mreq.body.article_img = mreq.file.path
+      .replaceAll("\\", "/")
+      .replace("public", process.env.BASE_URL);
 
   const event = new Event(mreq.body);
   event
@@ -90,10 +92,7 @@ function deleteFile(path, mres) {
   if (path != undefined)
     fs.unlink(path, (err) => {
       if (err) {
-        mres
-          .status(501)
-          .json({ message: "Can't remove the image file please try again" });
-        return;
+        return false;
       }
     });
 }
