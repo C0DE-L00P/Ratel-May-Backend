@@ -35,7 +35,7 @@ const studentSchema = new Schema({
       default: "Memorizing",
     },
     sessions_in_week: Number,
-    pref_days: [String],
+    pref_days: [Number],
     pref_times_of_day: [[Number]],
     plan: [],
   },

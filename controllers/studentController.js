@@ -5,10 +5,11 @@ const bcrypt = require("bcrypt");
 
 const students_get_id = (mreq, mres) => {
   Student.findById(mreq.params.id)
+  .populate("instructor",{name: 1,gender: 1,state: 1,_id:1})
+  .populate("sessions",{created_at: 1,is_live: 1,room_id: 1,recently_reached: 1,_id:1})
     .select({ password: 0 })
     .then((res) => {
-      instructorFromIds(res, mres);
-      studentFromIds(res, mres);
+      mres.json(res)
     });
 };
 

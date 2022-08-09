@@ -6,15 +6,36 @@ const Student = require("../models/studentSchema");
 
 const sessions_get_id = (mreq, mres) => {
   Session.findById(mreq.params.id)
-  .populate('chat', { name: 1, email: 1,_id: 1,has_whatsapp: 1, mobile: 1,privilages:1, is_available: 1})
-  .populate("participants",{ name: 1, email: 1,_id: 1,has_whatsapp: 1, mobile: 1,privilages:1, is_available: 1})
-  .populate("created_by",{ name: 1, email: 1,_id: 1,has_whatsapp: 1, mobile: 1,privilages:1, is_available: 1})
-  .populate("evaluations.evaluated_by",{ name: 1, _id: 1})
-  .populate("evaluations.student",{ name: 1, _id: 1})
-  .then((res) => {
-    mres.json(res)
-    // instructorAndStudentDataFromIds(res, mres);
-  });
+    .populate("chat", {
+      name: 1,
+      email: 1,
+      _id: 1,
+      has_whatsapp: 1,
+      mobile: 1,
+      privilages: 1,
+      is_available: 1,
+    })
+    .populate("participants", {
+      name: 1,
+      email: 1,
+      _id: 1,
+      has_whatsapp: 1,
+      mobile: 1,
+      privilages: 1,
+      is_available: 1,
+    })
+    .populate("created_by", {
+      name: 1,
+      email: 1,
+      _id: 1,
+      has_whatsapp: 1,
+      mobile: 1,
+      privilages: 1,
+      is_available: 1,
+    })
+    .populate("evaluations.evaluated_by", { name: 1, _id: 1 })
+    .populate("evaluations.student", { name: 1, _id: 1 })
+    .then((res) => mres.json(res));
 };
 
 const sessions_put_id = (mreq, mres) => {
@@ -55,38 +76,26 @@ const sessions_post = (mreq, mres) => {
 
 const sessions_get = (mreq, mres) => {
   Session.find()
-  .populate("participants",{ name: 1, email: 1,_id: 1,has_whatsapp: 1, mobile: 1,privilages:1, is_available: 1})
-  .populate("created_by",{ name: 1, email: 1,_id: 1,has_whatsapp: 1, mobile: 1,privilages:1, is_available: 1})
-  .then((cats) => mres.json(cats));
+    .populate("participants", {
+      name: 1,
+      email: 1,
+      _id: 1,
+      has_whatsapp: 1,
+      mobile: 1,
+      privilages: 1,
+      is_available: 1,
+    })
+    .populate("created_by", {
+      name: 1,
+      email: 1,
+      _id: 1,
+      has_whatsapp: 1,
+      mobile: 1,
+      privilages: 1,
+      is_available: 1,
+    })
+    .then((cats) => mres.json(cats));
 };
-
-function instructorAndStudentDataFromIds(result, res) {
-  Instructor.findById(result.createdBy)
-    .select({ password: 0 })
-    .then((inst_info) => {
-      //TODO: maybe this is not needed and just assign it for key instructor
-      result = { ...result, instructor_info: inst_info };
-    })
-    .then(async (result) => {
-      let participantsPromises = [];
-
-      result.participants.forEach((stuID) => {
-        participantsPromises.push(
-          Student.findById(stuID).select({ password: 0 })
-        );
-      });
-
-      result.participants = await Promise.all(participantsPromises);
-      await res.json(result);
-    })
-    .catch((err) =>
-      res
-        .status(404)
-        .json({
-          message: "Can't find info about student and instructor from db",
-        })
-    );
-}
 
 module.exports = {
   sessions_get_id,

@@ -36,10 +36,6 @@ const instructors_get_id = async (mreq, mres) => {
     mres.status(404).json({ message: "No instructor with such id" });
     return;
   }
-  //TODO: ربما انتا مش هتحتاج ترجع كل دا قدام
-  // await getItemsFromIds(res, (id) => Student.findById(id)).select({password: 0});;
-  // await getItemsFromIds(res, (id) => Session.findById(id));
-  // await getItemsFromIds(res, (id) => Feedback.findById(id));
 
   mres.json(res);
 };
@@ -155,15 +151,6 @@ const instructors_get = (mreq, mres) => {
 };
 
 //Helper Functions
-
-//TODO: united_right_now so test it out
-async function getItemsFromIds(result, whatToPush) {
-  let arrPromises = [];
-  result.sessions.forEach((id) => {
-    arrPromises.push(whatToPush(id));
-  });
-  result.sessions = await Promise.all(arrPromises);
-}
 
 module.exports = {
   instructors_get_id,

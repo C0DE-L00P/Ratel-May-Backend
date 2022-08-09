@@ -23,7 +23,7 @@ const instructorSchema = new Schema({
   programs: {type: [String],default: ["تحفيظ"]},
   prefs: {
     working_hours: [[Number]],
-    working_days: [String],
+    working_days: [Number],
   },
 });
 
