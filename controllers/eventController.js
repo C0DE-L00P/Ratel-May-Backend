@@ -1,5 +1,6 @@
 const Event = require("../models/eventSchema");
 const fs = require("fs");
+require("dotenv").config();
 
 // -------------------- IDS
 
@@ -54,8 +55,9 @@ const events_delete_id = (mreq, mres) => {
 const events_post = (mreq, mres) => {
   //Save the data in the database
   //TODO: check how frontend side would work with this img url as it sends public ex: "public/assets/events/1659927351441.webp",
+  
   if (mreq.file != undefined)
-    mreq.body.article_img = mreq.file.path.replaceAll("\\", "/");
+    mreq.body.article_img = mreq.file.path.replaceAll("\\", "/").replace("public",process.env.BASE_URL);
 
   const event = new Event(mreq.body);
   event
