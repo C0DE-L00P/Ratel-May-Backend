@@ -28,8 +28,8 @@ const events_put_id = (mreq, mres) => {
         updatedItem.article_img != undefined
       )
         deleteFile(docs._doc.article_img, mres);
-        
-      mres.status(200).json(updatedItem)
+
+      mres.status(200).json(updatedItem);
     } catch (error) {
       mres.status(400).json({ message: error });
     }

@@ -7,7 +7,7 @@ const cors = require("cors");
 const helmet = require("helmet");
 const Session = require("./models/sessionSchema");
 
-const PORT = process.env.PORT || 5000;   //خلي بالك هيروكو ميعرفش غير كلمة PORT يعني لازم في الـ env يكون اسمه PORT للسيرفر الرئيسي
+const PORT = process.env.PORT || 5000;
 const HOST = "0.0.0.0"
 
 //mongo Connection
