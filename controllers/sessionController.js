@@ -46,7 +46,7 @@ const sessions_put_id = (mreq, mres) => {
       let updatedItem = { ...docs._doc, ...mreq.body };
       mres.status(200).json(updatedItem);
     } catch (error) {
-      mres.status(400).json({ message: error });
+      mres.status(400).json({ message: error.message });
     }
   });
 };
@@ -70,31 +70,60 @@ const sessions_post = (mreq, mres) => {
       mres.json(res_cat);
     })
     .catch((err) => {
-      mres.status(501).json({ message: err });
+      mres.status(501).json({ message: err.message });
     });
 };
 
 const sessions_get = (mreq, mres) => {
-  Session.find()
-    .populate("currently_inside", {
-      name: 1,
-      email: 1,
-      _id: 1,
-      has_whatsapp: 1,
-      mobile: 1,
-      privilages: 1,
-      is_available: 1,
-    })
-    .populate("created_by", {
-      name: 1,
-      email: 1,
-      _id: 1,
-      has_whatsapp: 1,
-      mobile: 1,
-      privilages: 1,
-      is_available: 1,
-    })
-    .then((cats) => mres.json(cats));
+  if (mreq.query.user_id != undefined || mreq.query.userId != undefined) {
+    //Query sessions for this specific user
+    let que = mreq.query.user_id || mreq.query.userId;
+    var ObjectId = require('mongoose').Types.ObjectId
+
+    Session.find({ members_with_access: [new ObjectId(que)] })
+      .populate("currently_inside", {
+        name: 1,
+        email: 1,
+        _id: 1,
+        has_whatsapp: 1,
+        mobile: 1,
+        privilages: 1,
+        is_available: 1,
+      })
+      .populate("created_by", {
+        name: 1,
+        email: 1,
+        _id: 1,
+        has_whatsapp: 1,
+        mobile: 1,
+        privilages: 1,
+        is_available: 1,
+      }).then((cats) => mres.json(cats));;
+  } else {
+    // General
+    //TODO: must be authorized to access all sessions
+
+    Session.find()
+      .populate("currently_inside", {
+        name: 1,
+        email: 1,
+        _id: 1,
+        has_whatsapp: 1,
+        mobile: 1,
+        privilages: 1,
+        is_available: 1,
+      })
+      .populate("created_by", {
+        name: 1,
+        email: 1,
+        _id: 1,
+        has_whatsapp: 1,
+        mobile: 1,
+        privilages: 1,
+        is_available: 1,
+      })
+      .then((cats) => mres.json(cats));
+  }
 };
 
 module.exports = {

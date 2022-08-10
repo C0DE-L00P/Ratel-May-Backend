@@ -8,14 +8,13 @@ const sessionSchema = new Schema({
   ended_at: { type: Date },
   chat: [
     {
-      message: { type: String, required: true },
+      message: { type: String },
       date: { type: String, default: Date.now },
-      owner: { type: [Schema.Types.ObjectId], refPath: "model_type" },
-      required: true,
+      owner: { type: Schema.Types.ObjectId, refPath: "model_type"},
     },
   ],
   model_type: { type: String, enum: ["Student", "Instructor"] },
-  members_with_access: [{type: [Schema.Types.ObjectId], refPath: "model_type" }],
+  members_with_access: {type: [Schema.Types.ObjectId], refPath: "model_type" },
   created_by: { type: Schema.Types.ObjectId, ref: "Instructor" },
   is_live: { type: Boolean, default: true },
   previously_reached: String,
@@ -29,9 +28,9 @@ const sessionSchema = new Schema({
       notes: String,
     },
   ],
-  currently_inside: {type: [Schema.Types.ObjectId], refPath: "model_type" },
+  currently_inside: [{type: [Schema.Types.ObjectId], refPath: "model_type" }],
   members_count: {type: Number, default: function(){
-    return currently_inside.length
+    return this.currently_inside.length
   }}
 });
 //TODO: evaluations object now uses a lot of queries - embedding data would be best practice for this case
