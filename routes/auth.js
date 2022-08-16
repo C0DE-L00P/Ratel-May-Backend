@@ -3,7 +3,8 @@ const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcrypt");
 const nodemailer = require("nodemailer");
-const pinsList = require('../utils/pinList')
+const pinsList = require("../utils/pinList");
+const jwt = require("jsonwebtoken");
 
 //Controllers
 
@@ -12,11 +13,14 @@ const Student = require("../models/studentSchema.js");
 
 const user_post_login = async (mreq, mres) => {
   // check If Email Valid
+  let role = "instructor"
 
   let res_user = await Instructor.findOne({ email: mreq.body.email });
 
-  if (res_user == undefined)
+  if (res_user == undefined){
+    role = "student"
     res_user = await Student.findOne({ email: mreq.body.email });
+  }
 
   if (res_user == undefined) {
     mres.status(404).json({
@@ -30,15 +34,37 @@ const user_post_login = async (mreq, mres) => {
   bcrypt.compare(mreq.body.password, res_user.password, function (err, result) {
     if (result) {
       //Verified
-      //TODO: here we should start using JWT
-      //TODO: should be tested if this remove THE KEY
 
-      delete res_user.password;
-      mres.json(res_user);
+      //JWT Creation
+      const em = {
+        _id: res_user._id,
+        email: res_user.email,
+        role: role,
+        privilages: res_user.privilages,
+        name: res_user.name,
+        isAvailable: res_user.isAvailable,
+        subscription_state: res_user.subscription_state,
+      };
+      const accessToken = jwt.sign(em, process.env.ACCESS_TOKEN_SECRET);
+      
+      const user = res_user.toObject();  //IMPORTANT
+      user.accessToken = accessToken
+
+      //TODO: implement refresh token as well
+      // , {expiresIn: '30s'}
+      // const refreshToken = jwt.sign({_id: res_user._id,email: res_user.email}, process.env.REFRESH_TOKEN_SECRET, {expiresIn: '1y'});
+      // user.refreshToken = refreshToken
+
+      delete user.password;
+    
+      mres.json(user);
+
     } else {
       //Password is not correct
-      console.log('err',err)
-      mres.status(404).json({ message: `Auth Problem: No instructor nor student with such credentials`});
+      console.error("err", err);
+      mres.status(404).json({
+        message: `Auth Problem: No instructor nor student with such credentials`,
+      });
     }
   });
 };

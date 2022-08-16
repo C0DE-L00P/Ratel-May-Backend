@@ -35,7 +35,8 @@ const sessions_get_id = (mreq, mres) => {
     })
     .populate("evaluations.evaluated_by", { name: 1, _id: 1 })
     .populate("evaluations.student", { name: 1, _id: 1 })
-    .then((res) => mres.json(res));
+    .then((res) => mres.json(res))
+    .catch((err) => mres.status(400).json({ message: err.message }));
 };
 
 const sessions_put_id = (mreq, mres) => {
@@ -78,7 +79,7 @@ const sessions_get = (mreq, mres) => {
   if (mreq.query.user_id != undefined || mreq.query.userId != undefined) {
     //Query sessions for this specific user
     let que = mreq.query.user_id || mreq.query.userId;
-    var ObjectId = require('mongoose').Types.ObjectId
+    var ObjectId = require("mongoose").Types.ObjectId;
 
     Session.find({ members_with_access: [new ObjectId(que)] })
       .populate("currently_inside", {
@@ -98,7 +99,9 @@ const sessions_get = (mreq, mres) => {
         mobile: 1,
         privilages: 1,
         is_available: 1,
-      }).then((cats) => mres.json(cats));;
+      })
+      .then((cats) => mres.json(cats))
+      .catch((err) => mres.status(400).json({ message: err.message }));
   } else {
     // General
     //TODO: must be authorized to access all sessions
@@ -122,7 +125,8 @@ const sessions_get = (mreq, mres) => {
         privilages: 1,
         is_available: 1,
       })
-      .then((cats) => mres.json(cats));
+      .then((cats) => mres.json(cats))
+      .catch((err) => mres.status(400).json({ message: err.message }));
   }
 };
 

@@ -135,6 +135,10 @@ const instructors_get = (mreq, mres) => {
         has_whatsapp: 1,
         mobile: 1,
       })
+      .populate("evaluations", {
+        instructor_evaluation: 1,
+        student: 1,
+      })
       .select({ password: 0 })
       .then((filt_insts) => {
         if (filt_insts.length <= 0)

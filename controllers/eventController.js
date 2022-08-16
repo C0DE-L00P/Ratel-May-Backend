@@ -13,27 +13,28 @@ const events_get_id = (mreq, mres) => {
 };
 
 const events_put_id = (mreq, mres) => {
-  Event.findByIdAndUpdate(mreq.params.id, mreq.body, function (err, docs) {
-    if (err) {
-      mres.sendStatus(501);
-      return;
-    }
 
-    try {
-      let updatedItem = { ...docs._doc, ...mreq.body };
+    Event.findByIdAndUpdate(mreq.params.id, mreq.body, function (err, docs) {
+      if (err) {
+        mres.sendStatus(500);
+        return;
+      }
 
-      //Remove old image if the image has been changed
-      if (
-        docs._doc.article_img != updatedItem.article_img &&
-        updatedItem.article_img != undefined
-      )
-        deleteFile(docs._doc.article_img, mres);
+      try {
+        let updatedItem = { ...docs._doc, ...mreq.body };
 
-      mres.status(200).json(updatedItem);
-    } catch (error) {
-      mres.status(400).json({ message: error });
-    }
-  });
+        //Remove old image if the image has been changed
+        if (
+          docs._doc.article_img != updatedItem.article_img &&
+          updatedItem.article_img != undefined
+        )
+          deleteFile(docs._doc.article_img, mres);
+
+        mres.status(200).json(updatedItem);
+      } catch (error) {
+        mres.status(400).json({ message: error });
+      }
+    });
 };
 
 const events_delete_id = (mreq, mres) => {
