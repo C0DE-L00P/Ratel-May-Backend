@@ -1,5 +1,6 @@
 const authorized = (condition1, condition2) => {
   return (mreq, mres, next) => {
+    return next()
     if (
       (mreq.user.role !==condition1) ||
       (!condition2.includes(mreq.user.privilages))

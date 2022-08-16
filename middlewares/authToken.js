@@ -3,6 +3,7 @@ const Student = require("../models/studentSchema");
 require("dotenv").config();
 
 const authenticateToken = (mreq, mres, next) => {
+    return next()
   const authHeader = mreq.headers["authorization"];
   const token = authHeader && authHeader.split(" ")[1];
   const refreshToken = mreq.body.rtoken;
