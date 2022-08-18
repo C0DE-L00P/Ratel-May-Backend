@@ -105,7 +105,7 @@ const instructors_post = (mreq, mres) => {
   //First: hash the password and post it back in the object
 
   bcrypt.hash(mreq.body.password, 10, function (err, hash) {
-    if (err != null) return mres.json({ message: err });
+    if (err != null) return mres.json({ message: "error 1 : "+err });
     mreq.body.password = hash;
 
     //Then: Save the data in the database

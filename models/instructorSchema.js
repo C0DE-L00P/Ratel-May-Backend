@@ -10,7 +10,7 @@ const instructorSchema = new Schema({
   mobile: {type: String,required: true},
   email: {type: String,required: true},
   password: {type: String,required: true},
-  privilages: {type: String,required: true,enum: ["Admin", "Supervisor", "None"]},
+  privileges: {type: String,required: true,enum: ["Admin", "Supervisor", "None"]},
   students: [{ type: Schema.Types.ObjectId, ref: "Student" }],
   sessions: [{ type: Schema.Types.ObjectId, ref: "Session" }],
   evaluations: [{ type: Schema.Types.ObjectId, ref: "Feedback" }],
