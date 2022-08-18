@@ -5,7 +5,18 @@ const path = require("path");
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, "./public/assets/events/");
+    console.log("requested", req);
+    try {
+      cb(null, "./public/assets/events/");
+    } catch (error) {
+      console.log("first catch");
+      try {
+        cb(null, "./assets/events/");
+      } catch (error) {
+        console.log("second catch");
+        cb(null, "./");
+      }
+    }
   },
   filename: function (req, file, cb) {
     cb(null, Date.now() + path.extname(file.originalname)); //Appending extension

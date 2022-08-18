@@ -4,4 +4,3 @@ client/
 temp/
 logs
 .env
-public/assets/events/

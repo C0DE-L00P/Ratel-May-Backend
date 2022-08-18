@@ -67,7 +67,7 @@ const events_post = (mreq, mres) => {
       mres.json(res_cat);
     })
     .catch((err) => {
-      mres.status(501).json({ message: err });
+      mres.status(500).json({ message: err });
     });
 };
 
