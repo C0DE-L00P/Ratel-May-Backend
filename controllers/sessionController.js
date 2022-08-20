@@ -15,7 +15,7 @@ const sessions_get_id = (mreq, mres) => {
       privilages: 1,
       is_available: 1,
     })
-    .populate("currently_inside", {
+    .populate("attendants", {
       name: 1,
       email: 1,
       _id: 1,
@@ -35,7 +35,7 @@ const sessions_get_id = (mreq, mres) => {
     })
     .populate("evaluations.evaluated_by", { name: 1, _id: 1 })
     .populate("evaluations.student", { name: 1, _id: 1 })
-    .then((res) => mres.json(res))
+    .then((res) => (res ? mres.json(res):mres.sendStatus(404)))
     .catch((err) => mres.status(400).json({ message: err.message }));
 };
 
@@ -71,18 +71,19 @@ const sessions_post = (mreq, mres) => {
       mres.json(res_cat);
     })
     .catch((err) => {
-      mres.status(501).json({ message: err.message });
+      mres.status(500).json({ message: err.message });
     });
 };
 
-const sessions_get = (mreq, mres) => {
+const sessions_get = async (mreq, mres) => {
   if (mreq.query.user_id != undefined || mreq.query.userId != undefined) {
     //Query sessions for this specific user
     let que = mreq.query.user_id || mreq.query.userId;
-    var ObjectId = require("mongoose").Types.ObjectId;
+    var ObjectId = await require("mongoose").Types.ObjectId;
+    console.log('thihs',que)
 
-    Session.find({ members_with_access: [new ObjectId(que)] })
-      .populate("currently_inside", {
+    Session.find({ members_with_access: new ObjectId(que) })
+      .populate("attendants", {
         name: 1,
         email: 1,
         _id: 1,
@@ -107,7 +108,7 @@ const sessions_get = (mreq, mres) => {
     //TODO: must be authorized to access all sessions
 
     Session.find()
-      .populate("currently_inside", {
+      .populate("attendants", {
         name: 1,
         email: 1,
         _id: 1,

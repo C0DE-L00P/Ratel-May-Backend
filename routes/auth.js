@@ -3,8 +3,8 @@ const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcrypt");
 const nodemailer = require("nodemailer");
-const pinsList = require("../utils/pinList");
 const jwt = require("jsonwebtoken");
+const fileSys = require("fs");
 
 //Controllers
 
@@ -12,22 +12,20 @@ const Instructor = require("../models/instructorSchema.js");
 const Student = require("../models/studentSchema.js");
 
 const user_post_login = async (mreq, mres) => {
-  // check If Email Valid
-  let role = "instructor"
+  // check If Email is valid
+  let role = "instructor";
 
   let res_user = await Instructor.findOne({ email: mreq.body.email });
 
-  if (res_user == undefined){
-    role = "student"
+  if (!res_user) {
+    role = "student";
     res_user = await Student.findOne({ email: mreq.body.email });
   }
 
-  if (res_user == undefined) {
-    mres.status(404).json({
+  if (!res_user)
+    return mres.status(404).json({
       message: "Auth Problem: No instructor nor student with such credentials",
     });
-    return;
-  }
 
   // Now hash the password sent and compare with stored one
 
@@ -46,9 +44,9 @@ const user_post_login = async (mreq, mres) => {
         subscription_state: res_user.subscription_state,
       };
       const accessToken = jwt.sign(em, process.env.ACCESS_TOKEN_SECRET);
-      
-      const user = res_user.toObject();  //IMPORTANT
-      user.accessToken = accessToken
+
+      const user = res_user.toObject(); //IMPORTANT
+      user.accessToken = accessToken;
 
       //TODO: implement refresh token as well
       // , {expiresIn: '30s'}
@@ -56,12 +54,10 @@ const user_post_login = async (mreq, mres) => {
       // user.refreshToken = refreshToken
 
       delete user.password;
-    
-      mres.json(user);
 
+      mres.json(user);
     } else {
       //Password is not correct
-      console.error("err", err);
       mres.status(404).json({
         message: `Auth Problem: No instructor nor student with such credentials`,
       });
@@ -69,31 +65,72 @@ const user_post_login = async (mreq, mres) => {
   });
 };
 
-const user_post_forgotten = async (mreq, mres) => {
-  //TODO for password verification
-  //Send Email for his gmail with random verification code
-  //compare the code he wrote with the code you send
-  //is they are the same voala open the password
+const user_post_request_pin = async (mreq, mres) => {
+  // check If Email is valid
 
-  //TODO: use nodemailer
-
-  // check If Email Valid
-
+  let field = "instructors";
   let res_user = await Instructor.findOne({ email: mreq.body.email });
 
-  if (res_user == undefined)
+  if (!res_user) {
     res_user = await Student.findOne({ email: mreq.body.email });
-
-  if (res_user == undefined) {
-    mres.status(404).json({
-      message: "Auth Problem: No instructor nor student with such credentials",
-    });
-    return;
+    field = "students";
   }
 
+  if (!res_user)
+    return mres.status(404).json({
+      message: "Auth Problem: No instructor nor student with such credentials",
+    });
+
+  MailingPIN(mreq, mres, field);
+};
+
+const user_post_confirm_pin = async (mreq, mres) => {
+  let email = mreq.body.email;
+  let pin = mreq.body.pin;
+
+  let pinsList = JSON.parse(fileSys.readFileSync("utils/pinsList.json"));
+
+  if (!(email in pinsList)) return mres.sendStatus(401);
+
+  pinsList[email].trials == 5
+    ? delete pinsList[email]
+    : (pinsList[email].trials = pinsList[email].trials + 1);
+
+  fileSys.writeFileSync("utils/pinsList.json", JSON.stringify(pinsList));
+
+  if (!(email in pinsList)) return mres.sendStatus(401);
+
+  if (pinsList[email].pin != pin && pinsList[email].pin)
+    return mres.status(403).json({ message: "PIN is incorrect" });
+
+  //When pin is identical to the one sent
+  //Check for the user data in the database to give him the id
+
+  if (!("rpin" in mreq.body)) {
+    //means that he is not registering for the first time
+    let user = await Instructor.findOne({ email: email }).select({ _id: 1 });
+
+    if (!user)
+      user = await Student.findOne({ email: email }).select({ _id: 1 });
+
+    if (!user)
+      return mres.status(404).json({
+        message:
+          "Auth Problem: No instructor nor student with such credentials",
+      });
+
+    //OK now send his id back to him to put the newPass later on
+    mres
+      .status(200)
+      .json({ _id: user._id, field: pinsList[email].searchField });
+  } else mres.sendStatus(200);
+};
+
+//Helper Function
+
+function MailingPIN(mreq, mres, field) {
   //Sending an email with verification code
 
-  //TODO: use Ratel May gmail account and HE MUST VERIFY 2 WAY AUTH then create an app password to use it here
   var transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
@@ -106,20 +143,28 @@ const user_post_forgotten = async (mreq, mres) => {
 
   //Mail Format
 
+  let isRegistrationPIN = "rpin" in mreq.body;
+
   var mailOptions = {
     from: process.env.EMAIL,
     to: mreq.body.email,
-    subject: "Here's your PIN",
-    html: `<div style="font-size:16px;line-height: 1.25rem">We received a request to reset the password on your Ratel May Account.
+    subject: `${
+      isRegistrationPIN ? "Verify your email in Ratel May" : "Here's your PIN"
+    }`,
+    html: `<div style="font-size:16px;line-height: 1.25rem"> ${
+      isRegistrationPIN
+        ? "You need to verify that this email belongs to you to complete registration"
+        : "We received a request to reset password in your Ratel May Account"
+    }.
     <br>
     <br>
     <span style="font-weight:700; font-size:40px;">
     ${PIN}</span>
     <br>
-Enter this code to complete the reset.
+Enter this code to complete the ${isRegistrationPIN ? "verification" : "reset"}.
 <br>
 <br>
-Thanks for helping us keep your account secure.
+Thanks for helping us ${isRegistrationPIN ? "" : "keep your account secure"}.
 <br>
 The Ratel May Team</div>`,
   };
@@ -127,28 +172,35 @@ The Ratel May Team</div>`,
   //Send Mail
 
   transporter.sendMail(mailOptions, function (error, info) {
-    if (error) {
-      mres.status(500).json({ message: error });
-      return;
-    }
+    if (error) return mres.status(500).json({ message: error });
 
-    pinsList[mreq.body.email] = PIN;
+    let pinsList = {};
+
+    try {
+      pinsList = JSON.parse(fileSys.readFileSync("utils/pinsList.json"));
+    } catch (err) {}
+
+    pinsList[mreq.body.email] = { pin: PIN, searchField: field, trials: 0 };
+    fileSys.writeFileSync("utils/pinsList.json", JSON.stringify(pinsList));
 
     //Remove PIN from pinsList after 10 minutes
     setTimeout(() => {
-      delete pinsList[mreq.body.email];
+      let pinsList = {};
+      try {
+        pinsList = JSON.parse(fileSys.readFileSync("utils/pinsList.json"));
+        delete pinsList[mreq.body.email];
+        fileSys.writeFileSync("utils/pinsList.json", JSON.stringify(pinsList));
+      } catch (err) {}
     }, 10 * 60 * 1000);
 
     mres.sendStatus(200);
   });
-};
+}
 
-//TODO: password reset post request
-
-//Helper Function
+//Routes
 
 router.route("/login").post(user_post_login);
-
-router.route("/forgotten").post(user_post_forgotten);
+router.route("/request_pin").post(user_post_request_pin);
+router.route("/confirm_pin").post(user_post_confirm_pin);
 
 module.exports = router;

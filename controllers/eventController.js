@@ -6,10 +6,8 @@ require("dotenv").config();
 
 const events_get_id = (mreq, mres) => {
   Event.findById(mreq.params.id)
-    .then((res) => {
-      mres.json(res);
-    })
-    .catch((err) => mres.sendStatus(404));
+  .then((res) => (res ? mres.json(res):mres.sendStatus(404)))
+  .catch(() => mres.sendStatus(404));
 };
 
 const events_put_id = (mreq, mres) => {
@@ -43,7 +41,7 @@ const events_delete_id = (mreq, mres) => {
       if (err) return mres.sendStatus(404);
       else {
         const success = deleteFile(docs._doc.article_img, mres);
-        return success ? mres.sendStatus(200) : mres.sendStatus(501);
+        return success ? mres.sendStatus(200) : mres.sendStatus(500);
       }
     } catch (error) {
       return mres.status(400).json({ message: error });

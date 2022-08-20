@@ -15,7 +15,7 @@ const feedbacks_get_id = (mreq, mres) => {
       privilages: 1,
       is_available: 1,
     })
-    .populate("currently_inside", {
+    .populate("attendants", {
       name: 1,
       email: 1,
       _id: 1,
@@ -35,7 +35,8 @@ const feedbacks_get_id = (mreq, mres) => {
     })
     .populate("evaluations.evaluated_by", { name: 1, _id: 1 })
     .populate("evaluations.student", { name: 1, _id: 1 })
-    .then((res) => mres.json(res));
+    .then((res) => (res ? mres.json(res):mres.sendStatus(404)))
+    .catch(()=> mres.sendStatus(404))
 };
 
 // const feedbacks_put_id = (mreq, mres) => {

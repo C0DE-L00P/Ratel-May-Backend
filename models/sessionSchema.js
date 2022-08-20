@@ -28,10 +28,7 @@ const sessionSchema = new Schema({
       notes: String,
     },
   ],
-  currently_inside: [{type: [Schema.Types.ObjectId], refPath: "model_type" }],
-  members_count: {type: Number, default: function(){
-    return this.currently_inside.length
-  }}
+  attendants: [{type: [Schema.Types.ObjectId], refPath: "model_type" }]
 });
 //TODO: evaluations object now uses a lot of queries - embedding data would be best practice for this case
 
