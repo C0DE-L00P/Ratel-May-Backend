@@ -15,7 +15,14 @@ const user_post_login = async (mreq, mres) => {
   // check If Email is valid
   let role = "instructor";
 
-  let res_user = await Instructor.findOne({ email: mreq.body.email });
+  let res_user = await Instructor.findOne({ email: mreq.body.email }).populate("students", {
+    name: 1,
+    email: 1,
+    _id: 1,
+    mobile: 1,
+    populate: { path: 'sessions', limit: 1,sort: { created: -1 }}
+  });
+  
 
   if (!res_user) {
     role = "student";

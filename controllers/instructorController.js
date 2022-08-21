@@ -1,6 +1,8 @@
 const Instructor = require("../models/instructorSchema");
 const bcrypt = require("bcrypt");
 const fileSys = require("fs");
+const Session = require("../models/sessionSchema");
+
 
 // -------------------- IDS
 
@@ -13,7 +15,7 @@ const instructors_get_id = async (mreq, mres) => {
       name: 1,
       email: 1,
       _id: 1,
-      has_whatsapp: 1,
+      //has_whatsapp: 1,
       mobile: 1,
     })
     .populate("sessions", {
@@ -51,21 +53,6 @@ const instructors_put_id = (mreq, mres) => {
 
   if ("password" in mreq.body) handlePasswordChange(mreq, mres, email, pin);
   else findAndUpdate(mreq, mres);
-
-  // //TODO: handle password change
-  // delete mreq.body.password;
-  // delete mreq.body.email;
-
-  // Instructor.findByIdAndUpdate(mreq.params.id, mreq.body, function (err, docs) {
-  //   if (err) return mres.sendStatus(500);
-
-  //   try {
-  //     let updatedItem = { ...docs._doc, ...mreq.body };
-  //     mres.status(200).json(updatedItem);
-  //   } catch (error) {
-  //     mres.status(400).json({ message: error });
-  //   }
-  // }).select({ password: 0 });
 };
 
 const instructors_delete_id = (mreq, mres) => {
@@ -203,6 +190,7 @@ function findAndUpdate(mreq, mres) {
   delete mreq.body.email; //Email can't be changed
   delete mreq.body.old_password;
   delete mreq.body.pin;
+  console.log('here',mreq.body)
 
   //if he put a session concat the sessions don't overwrite
   Session.updateOne(

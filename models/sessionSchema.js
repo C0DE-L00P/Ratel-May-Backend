@@ -11,8 +11,22 @@ const sessionSchema = new Schema({
   members_with_access: {type: [Schema.Types.ObjectId], refPath: "model_type" },
   created_by: { type: Schema.Types.ObjectId, ref: "Instructor" },
   is_live: { type: Boolean, default: true },
-  previously_reached: String,
-  recently_reached: String,
+  previously_reached: {
+    ayah: Number,
+    juz: Number,
+    page: Number,
+    surah_no: Number,
+    surah_name: String,
+    surah_name_translated: String,
+  },
+  recently_reached: {
+    ayah: Number,
+    juz: Number,
+    page: Number,
+    surah_no: Number,
+    surah_name: String,
+    surah_name_translated: String,
+  },
   evaluations: [
     {
       evaluated_by: { type: Schema.Types.ObjectId, ref: "Instructor" },

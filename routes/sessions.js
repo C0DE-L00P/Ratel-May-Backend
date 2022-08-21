@@ -13,4 +13,6 @@ router.route("")
 .post(sessionController.sessions_post)
 .get(sessionController.sessions_get);
 
+router.route("/last").post(sessionController.sessions_post_last)
+
 module.exports = router;

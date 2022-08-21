@@ -1,6 +1,7 @@
 const Student = require("../models/studentSchema");
 const bcrypt = require("bcrypt");
 const fileSys = require("fs");
+const Session = require("../models/sessionSchema");
 
 // -------------------- IDS
 
@@ -101,7 +102,20 @@ const students_get = (mreq, mres) => {
         mres.json(filt_insts);
       })
       .catch((err) => mres.status(404).json({ message: err.message }));
-  } else
+  } 
+  //TO GET LiST of STUDENTS DATA
+  // else if(mreq.query.list || mreq.query.List){
+  //   Student.find({
+  //     '_id': { $in: [
+  //         mongoose.Types.ObjectId('4ed3ede8844f0f351100000c'),
+  //         mongoose.Types.ObjectId('4ed3f117a844e0471100000d'), 
+  //         mongoose.Types.ObjectId('4ed3f18132f50c491100000e')
+  //     ]}
+  // }, function(err, docs){
+  //      console.log(docs);
+  // });
+  // }
+  else
     Student.find()
       .select({ password: 0 })
       .then((cats) => mres.json(cats));

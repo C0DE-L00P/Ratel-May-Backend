@@ -1,6 +1,4 @@
 const Session = require("../models/sessionSchema");
-const Instructor = require("../models/instructorSchema");
-const Student = require("../models/studentSchema");
 
 // -------------------- IDS
 
@@ -10,7 +8,7 @@ const sessions_get_id = (mreq, mres) => {
     //   name: 1,
     //   email: 1,
     //   _id: 1,
-    //   has_whatsapp: 1,
+    //   //has_whatsapp: 1,
     //   mobile: 1,
     //   privileges: 1,
     //   is_available: 1,
@@ -19,7 +17,7 @@ const sessions_get_id = (mreq, mres) => {
       name: 1,
       email: 1,
       _id: 1,
-      has_whatsapp: 1,
+      //has_whatsapp: 1,
       mobile: 1,
       privileges: 1,
       is_available: 1,
@@ -28,7 +26,7 @@ const sessions_get_id = (mreq, mres) => {
       name: 1,
       email: 1,
       _id: 1,
-      has_whatsapp: 1,
+      //has_whatsapp: 1,
       mobile: 1,
       privileges: 1,
       is_available: 1,
@@ -40,6 +38,8 @@ const sessions_get_id = (mreq, mres) => {
 };
 
 const sessions_put_id = (mreq, mres) => {
+  
+  if(!mreq.body.is_live) delete mreq.body.attendants
   
   //To mark as attended
   Session.updateOne(
@@ -104,7 +104,7 @@ const sessions_get = async (mreq, mres) => {
         name: 1,
         email: 1,
         _id: 1,
-        has_whatsapp: 1,
+        //has_whatsapp: 1,
         mobile: 1,
         privileges: 1,
         is_available: 1,
@@ -113,7 +113,7 @@ const sessions_get = async (mreq, mres) => {
         name: 1,
         email: 1,
         _id: 1,
-        has_whatsapp: 1,
+        //has_whatsapp: 1,
         mobile: 1,
         privileges: 1,
         is_available: 1,
@@ -129,7 +129,7 @@ const sessions_get = async (mreq, mres) => {
         name: 1,
         email: 1,
         _id: 1,
-        has_whatsapp: 1,
+        //has_whatsapp: 1,
         mobile: 1,
         privileges: 1,
         is_available: 1,
@@ -138,7 +138,7 @@ const sessions_get = async (mreq, mres) => {
         name: 1,
         email: 1,
         _id: 1,
-        has_whatsapp: 1,
+        //has_whatsapp: 1,
         mobile: 1,
         privileges: 1,
         is_available: 1,
@@ -148,10 +148,25 @@ const sessions_get = async (mreq, mres) => {
   }
 };
 
+
+function sessions_post_last(mreq,mres){
+  
+  let listOfUsers = mreq.body.members
+  Session.find({
+        'members_with_access': {  $all :[listOfUsers]}
+    }, function(err, docs){
+      if(err) return mres.sendStatus(404)
+      mres.status(200).json(docs)
+      console.log('reached') 
+    })
+}
+
+
 module.exports = {
   sessions_get_id,
   sessions_put_id,
   sessions_delete_id,
   sessions_post,
   sessions_get,
+  sessions_post_last,
 };
