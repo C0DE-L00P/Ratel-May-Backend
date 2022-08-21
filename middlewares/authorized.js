@@ -3,7 +3,7 @@ const authorized = (condition1, condition2) => {
     return next()
     if (
       (mreq.user.role !==condition1) ||
-      (!condition2.includes(mreq.user.privilages))
+      (!condition2.includes(mreq.user.privileges))
     )
       return mres.sendStatus(403);
 

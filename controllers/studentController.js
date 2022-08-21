@@ -23,8 +23,6 @@ const students_get_id = (mreq, mres) => {
 };
 
 const students_put_id = async (mreq, mres) => {
-  //TODO: handle password change with pin or with the old password piece of data
-
   if (mreq.params.id.length != 12 && mreq.params.id.length != 24)
     return mres.sendStatus(400);
 
@@ -90,7 +88,7 @@ const students_get = (mreq, mres) => {
   if (mreq.query.name || mreq.query.Name) {
     //String Query Param for Search
     let que = mreq.query.Name || mreq.query.name;
-    Student.find({ name: { "$regex": que, "$options": "i" }})
+    Student.find({ name: { $regex: que, $options: "i" } })
       .select({ password: 0 })
       .populate("instructor", { name: 1 })
       .populate("sessions", {
@@ -118,7 +116,7 @@ async function handlePasswordChange(mreq, mres, email, pin) {
     //1- if he passes the old password
 
     let stud = await Student.findOne({ email: email });
-    if(!stud) return mres.sendStatus(404)
+    if (!stud) return mres.sendStatus(404);
 
     await bcrypt.compare(
       mreq.body.old_password,
@@ -161,7 +159,7 @@ async function handlePasswordChange(mreq, mres, email, pin) {
 
         console.log("pinned 5");
         findAndUpdate(mreq, mres);
-      } else mres.status(409).json({message: 'PIN is incorrect'});
+      } else mres.status(409).json({ message: "PIN is incorrect" });
     } else {
       delete mreq.body.password; //3- Passes non of them then not allowed to change pass
       findAndUpdate(mreq, mres);
@@ -175,17 +173,39 @@ function findAndUpdate(mreq, mres) {
   delete mreq.body.old_password;
   delete mreq.body.pin;
 
-  Student.findByIdAndUpdate(mreq.params.id, mreq.body, function (err, docs) {
-    if (err) return mres.sendStatus(500);
+  //TODO: maybe there is a way to mix both requests 
+  //Add session and notebooks first
+  Session.updateOne(
+    { _id: mreq.params.id },
+    {
+      $addToSet: { sessions: mreq.body.sessions },
+      $addToSet: { notes_in_book: mreq.body.notes_in_book },
+    },
+    function (err, result) {
+      if (err) console.error(err);
 
-    try {
-      let updatedItem = { ...docs._doc, ...mreq.body };
-      // delete updatedItem.password
-      mres.status(200).json(updatedItem);
-    } catch (error) {
-      mres.status(400).json({ message: error });
+      delete mreq.body.sessions;
+      delete mreq.body.notes_in_book;
+
+  //Then update
+      
+      Student.findByIdAndUpdate(
+        mreq.params.id,
+        mreq.body,
+        function (err, docs) {
+          if (err) return mres.sendStatus(500);
+
+          try {
+            let updatedItem = { ...docs._doc, ...mreq.body };
+            // delete updatedItem.password
+            mres.status(200).json(updatedItem);
+          } catch (error) {
+            mres.status(400).json({ message: error });
+          }
+        }
+      ).select({ password: 0 });
     }
-  }).select({ password: 0 });
+  );
 }
 
 module.exports = {

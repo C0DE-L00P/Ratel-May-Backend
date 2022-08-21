@@ -6,22 +6,22 @@ const Student = require("../models/studentSchema");
 
 const sessions_get_id = (mreq, mres) => {
   Session.findById(mreq.params.id)
-    .populate("chat", {
-      name: 1,
-      email: 1,
-      _id: 1,
-      has_whatsapp: 1,
-      mobile: 1,
-      privilages: 1,
-      is_available: 1,
-    })
+    // .populate("chat", {
+    //   name: 1,
+    //   email: 1,
+    //   _id: 1,
+    //   has_whatsapp: 1,
+    //   mobile: 1,
+    //   privileges: 1,
+    //   is_available: 1,
+    // })
     .populate("attendants", {
       name: 1,
       email: 1,
       _id: 1,
       has_whatsapp: 1,
       mobile: 1,
-      privilages: 1,
+      privileges: 1,
       is_available: 1,
     })
     .populate("created_by", {
@@ -30,26 +30,43 @@ const sessions_get_id = (mreq, mres) => {
       _id: 1,
       has_whatsapp: 1,
       mobile: 1,
-      privilages: 1,
+      privileges: 1,
       is_available: 1,
     })
     .populate("evaluations.evaluated_by", { name: 1, _id: 1 })
     .populate("evaluations.student", { name: 1, _id: 1 })
-    .then((res) => (res ? mres.json(res):mres.sendStatus(404)))
+    .then((res) => (res ? mres.json(res) : mres.sendStatus(404)))
     .catch((err) => mres.status(400).json({ message: err.message }));
 };
 
 const sessions_put_id = (mreq, mres) => {
-  Session.findByIdAndUpdate(mreq.params.id, mreq.body, function (err, docs) {
-    if (err) return mres.sendStatus(501);
+  
+  //To mark as attended
+  Session.updateOne(
+    { _id: mreq.params.id },
+    { $addToSet: { attendants: mreq.body.attendants },  $addToSet: { evaluations: mreq.body.evaluations } },
+    function (err, result) {
+      if (err) console.error(err);
 
-    try {
-      let updatedItem = { ...docs._doc, ...mreq.body };
-      mres.status(200).json(updatedItem);
-    } catch (error) {
-      mres.status(400).json({ message: error.message });
+      delete mreq.body.attendants;
+      delete mreq.body.evaluations;
+
+      Session.findByIdAndUpdate(
+        mreq.params.id,
+        mreq.body,
+        function (err, docs) {
+          if (err) return mres.sendStatus(501);
+
+          try {
+            let updatedItem = { ...docs._doc, ...mreq.body };
+            mres.status(200).json(updatedItem);
+          } catch (error) {
+            mres.status(400).json({ message: error.message });
+          }
+        }
+      );
     }
-  });
+  );
 };
 
 const sessions_delete_id = (mreq, mres) => {
@@ -80,7 +97,7 @@ const sessions_get = async (mreq, mres) => {
     //Query sessions for this specific user
     let que = mreq.query.user_id || mreq.query.userId;
     var ObjectId = await require("mongoose").Types.ObjectId;
-    console.log('thihs',que)
+    console.log("thihs", que);
 
     Session.find({ members_with_access: new ObjectId(que) })
       .populate("attendants", {
@@ -89,7 +106,7 @@ const sessions_get = async (mreq, mres) => {
         _id: 1,
         has_whatsapp: 1,
         mobile: 1,
-        privilages: 1,
+        privileges: 1,
         is_available: 1,
       })
       .populate("created_by", {
@@ -98,7 +115,7 @@ const sessions_get = async (mreq, mres) => {
         _id: 1,
         has_whatsapp: 1,
         mobile: 1,
-        privilages: 1,
+        privileges: 1,
         is_available: 1,
       })
       .then((cats) => mres.json(cats))
@@ -114,7 +131,7 @@ const sessions_get = async (mreq, mres) => {
         _id: 1,
         has_whatsapp: 1,
         mobile: 1,
-        privilages: 1,
+        privileges: 1,
         is_available: 1,
       })
       .populate("created_by", {
@@ -123,7 +140,7 @@ const sessions_get = async (mreq, mres) => {
         _id: 1,
         has_whatsapp: 1,
         mobile: 1,
-        privilages: 1,
+        privileges: 1,
         is_available: 1,
       })
       .then((cats) => mres.json(cats))

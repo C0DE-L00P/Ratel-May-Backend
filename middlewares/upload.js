@@ -5,17 +5,10 @@ const path = require("path");
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    console.log("requested", req);
     try {
-      cb(null, "./public/assets/events/");
+      cb(null, "./public/uploads/");
     } catch (error) {
-      console.log("first catch");
-      try {
-        cb(null, "./assets/events/");
-      } catch (error) {
-        console.log("second catch");
-        cb(null, "./");
-      }
+      console.error(error);
     }
   },
   filename: function (req, file, cb) {

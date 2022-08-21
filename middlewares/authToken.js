@@ -29,7 +29,7 @@ const authenticateToken = (mreq, mres, next) => {
     //             _id: res_user._id,
     //             email: res_user.email,
     //             role: role,
-    //             privilages: res_user.privilages,
+    //             privileges: res_user.privileges,
     //             name: res_user.name,
     //             isAvailable: res_user.isAvailable,
     //             subscription_state: res_user.subscription_state,

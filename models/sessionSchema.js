@@ -6,13 +6,7 @@ const sessionSchema = new Schema({
   created_at: { type: Date, default: Date.now },
   start_at: { type: Date },
   ended_at: { type: Date },
-  chat: [
-    {
-      message: { type: String },
-      date: { type: String, default: Date.now },
-      owner: { type: Schema.Types.ObjectId, refPath: "model_type"},
-    },
-  ],
+  is_exam: {type: Boolean, default: false},
   model_type: { type: String, enum: ["Student", "Instructor"] },
   members_with_access: {type: [Schema.Types.ObjectId], refPath: "model_type" },
   created_by: { type: Schema.Types.ObjectId, ref: "Instructor" },
@@ -28,9 +22,17 @@ const sessionSchema = new Schema({
       notes: String,
     },
   ],
-  attendants: [{type: [Schema.Types.ObjectId], refPath: "model_type" }]
+  attendants: {type: [Schema.Types.ObjectId], refPath: "model_type" }
 });
 //TODO: evaluations object now uses a lot of queries - embedding data would be best practice for this case
+
+  // chat: [
+  //   {
+  //     message: { type: String },
+  //     date: { type: String, default: Date.now },
+  //     owner: { type: Schema.Types.ObjectId, refPath: "model_type"},
+  //   },
+  // ],
 
 const Session = new mongoose.model("Session", sessionSchema);
 

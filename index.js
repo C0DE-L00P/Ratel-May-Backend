@@ -3,18 +3,15 @@ const mongoose = require("mongoose");
 const express = require("express");
 const fetch = require("node-fetch");
 const app = express();
-const server = require("http").createServer(app);
-const helmet = require("helmet");
 const logger = require("morgan");
 const cors = require("cors");
-
-const Session = require("./models/sessionSchema");
 
 var corsOptions = {
   origin: '*',
   optionsSuccessStatus: 200,
 }
 
+app.use(express.static('public'))
 app.use(cors(corsOptions))
 app.use(logger("dev"));
 app.use(express.json());
@@ -50,6 +47,7 @@ const headers = {
   Authorization: "Bearer " + API_KEY,
 };
 
+
 const getRoom = (room) => {
   return fetch(`https://api.daily.co/v1/rooms/${room}`, {
     method: "GET",
@@ -61,6 +59,7 @@ const getRoom = (room) => {
     })
     .catch((err) => console.error("error:" + err));
 };
+
 
 const createRoom = (room) => {
   return fetch("https://api.daily.co/v1/rooms", {
@@ -100,7 +99,6 @@ app.get("/video-call/:id", async function (req, res) {
 });
 
 app.get("/video-api-url", function (req, res) {
-  console.log('trying')
   res.json({url: process.env.DAILY_CLIENT_URL})
 });
 

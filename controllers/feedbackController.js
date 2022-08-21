@@ -1,27 +1,25 @@
 const Feedback = require("../models/feedbackSchema");
-const Instructor = require("../models/instructorSchema");
-const Student = require("../models/studentSchema");
 
 // -------------------- IDS
 
 const feedbacks_get_id = (mreq, mres) => {
   Feedback.findById(mreq.params.id)
-    .populate("chat", {
-      name: 1,
-      email: 1,
-      _id: 1,
-      has_whatsapp: 1,
-      mobile: 1,
-      privilages: 1,
-      is_available: 1,
-    })
+    // .populate("chat", {
+    //   name: 1,
+    //   email: 1,
+    //   _id: 1,
+    //   has_whatsapp: 1,
+    //   mobile: 1,
+    //   privileges: 1,
+    //   is_available: 1,
+    // })
     .populate("attendants", {
       name: 1,
       email: 1,
       _id: 1,
       has_whatsapp: 1,
       mobile: 1,
-      privilages: 1,
+      privileges: 1,
       is_available: 1,
     })
     .populate("created_by", {
@@ -30,7 +28,7 @@ const feedbacks_get_id = (mreq, mres) => {
       _id: 1,
       has_whatsapp: 1,
       mobile: 1,
-      privilages: 1,
+      privileges: 1,
       is_available: 1,
     })
     .populate("evaluations.evaluated_by", { name: 1, _id: 1 })

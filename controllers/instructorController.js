@@ -1,12 +1,12 @@
 const Instructor = require("../models/instructorSchema");
 const bcrypt = require("bcrypt");
-const fileSys = require('fs')
+const fileSys = require("fs");
 
 // -------------------- IDS
 
 const instructors_get_id = async (mreq, mres) => {
-
-  if (mreq.params.id.length != 12 && mreq.params.id.length != 24) return mres.sendStatus(400);
+  if (mreq.params.id.length != 12 && mreq.params.id.length != 24)
+    return mres.sendStatus(400);
 
   let res = await Instructor.findById(mreq.params.id)
     .populate("students", {
@@ -22,7 +22,7 @@ const instructors_get_id = async (mreq, mres) => {
       ended_at: 1,
       _id: 1,
       members_with_access: 1,
-      members_count:1,
+      members_count: 1,
       is_live: 1,
       previously_reached: 1,
       recently_reached: 1,
@@ -40,17 +40,17 @@ const instructors_get_id = async (mreq, mres) => {
   }
 
   res ? mres.json(res) : mres.sendStatus(404);
-}
+};
 
 const instructors_put_id = (mreq, mres) => {
+  if (mreq.params.id.length != 12 && mreq.params.id.length != 24)
+    return mres.sendStatus(400);
 
-  if (mreq.params.id.length != 12 && mreq.params.id.length != 24) return mres.sendStatus(400);
-  
   let email = mreq.body.email;
   let pin = mreq.body.pin;
 
-  if ("password" in mreq.body) handlePasswordChange(mreq,mres,email,pin)
-  else findAndUpdate(mreq,mres);
+  if ("password" in mreq.body) handlePasswordChange(mreq, mres, email, pin);
+  else findAndUpdate(mreq, mres);
 
   // //TODO: handle password change
   // delete mreq.body.password;
@@ -69,7 +69,8 @@ const instructors_put_id = (mreq, mres) => {
 };
 
 const instructors_delete_id = (mreq, mres) => {
-  if (mreq.params.id.length != 12 && mreq.params.id.length != 24) return mres.sendStatus(400);
+  if (mreq.params.id.length != 12 && mreq.params.id.length != 24)
+    return mres.sendStatus(400);
 
   Instructor.findByIdAndDelete(mreq.params.id, function (err) {
     if (err) mres.status(404).json({ message: err });
@@ -80,11 +81,13 @@ const instructors_delete_id = (mreq, mres) => {
 // --------------------- General
 
 const instructors_post = async (mreq, mres) => {
-  
   //Check if this email is already registered
-  let alreadyRegistered = await Instructor.exists({email: mreq.body.email})
-  if(alreadyRegistered) return mres.status(409).json({message: 'This email is already registered'})
-  
+  let alreadyRegistered = await Instructor.exists({ email: mreq.body.email });
+  if (alreadyRegistered)
+    return mres
+      .status(409)
+      .json({ message: "This email is already registered" });
+
   //First: hash the password and post it back in the object
 
   bcrypt.hash(mreq.body.password, 10, function (err, hash) {
@@ -93,7 +96,7 @@ const instructors_post = async (mreq, mres) => {
 
     //Then: Save the data in the database
     const instructor = new Instructor(mreq.body);
-    
+
     instructor
       .save()
       .then((res_cat) => {
@@ -111,12 +114,12 @@ const instructors_get = (mreq, mres) => {
     //String Query Param for Search
     //TODO: add students count and sessions count as seperate fields
     let que = mreq.query.Name || mreq.query.name;
-    Instructor.find({ name: { "$regex": que, "$options": "i" }})
+    Instructor.find({ name: { $regex: que, $options: "i" } })
       .populate("students", {
         name: 1,
         email: 1,
         _id: 1,
-        has_whatsapp: 1,
+        whatsapp_number: 1,
         mobile: 1,
       })
       .populate("evaluations", {
@@ -139,31 +142,32 @@ const instructors_get = (mreq, mres) => {
       .then((cats) => mres.json(cats));
 };
 
-
 //Helper Functions
 
-async function handlePasswordChange(mreq,mres,email,pin){
+async function handlePasswordChange(mreq, mres, email, pin) {
   //TODO: a lot of redundency I can do better
-  
+
   if ("old_password" in mreq.body) {
     //1- if he passes the old password
 
     let inst = await Instructor.findOne({ email: email });
-    if(!inst) return mres.sendStatus(404)
+    if (!inst) return mres.sendStatus(404);
 
     await bcrypt.compare(
       mreq.body.old_password,
       inst.password,
       async function (err, result) {
         //Passwords matched
-        if (!result) return mres.status(401).json({message: 'Credentials are incorrect'})
+        if (!result)
+          return mres
+            .status(401)
+            .json({ message: "Credentials are incorrect" });
         mreq.body.password = await bcrypt.hash(mreq.body.password, 10);
         console.log("1 pass", mreq.body.password);
-        findAndUpdate(mreq,mres);
+        findAndUpdate(mreq, mres);
       }
     );
   } else {
-    
     if ("pin" in mreq.body) {
       //2- if he passes a pin code sent for his email
       let pinsList = {};
@@ -171,7 +175,7 @@ async function handlePasswordChange(mreq,mres,email,pin){
         pinsList = JSON.parse(fileSys.readFileSync("utils/pinsList.json"));
       } catch (err) {}
 
-      if(!(email in pinsList)) return mres.sendStatus(401)
+      if (!(email in pinsList)) return mres.sendStatus(401);
 
       if (pinsList[email].pin == pin) {
         //check the pin one more time
@@ -186,7 +190,7 @@ async function handlePasswordChange(mreq,mres,email,pin){
 
         console.log("pinned 5");
         findAndUpdate(mreq, mres);
-      } else mres.status(409).json({message: 'PIN is incorrect'});
+      } else mres.status(409).json({ message: "PIN is incorrect" });
     } else {
       delete mreq.body.password; //3- Passes non of them then not allowed to change pass
       findAndUpdate(mreq, mres);
@@ -195,23 +199,44 @@ async function handlePasswordChange(mreq,mres,email,pin){
   }
 }
 
-function findAndUpdate(mreq,mres) {
+function findAndUpdate(mreq, mres) {
   delete mreq.body.email; //Email can't be changed
   delete mreq.body.old_password;
   delete mreq.body.pin;
 
-  Instructor.findByIdAndUpdate(mreq.params.id, mreq.body, function (err, docs) {
+  //if he put a session concat the sessions don't overwrite
+  Session.updateOne(
+    { _id: mreq.params.id },
+    {
+      $addToSet: { sessions: mreq.body.sessions },
+      $addToSet: { students: mreq.body.students },
+      $addToSet: { evaluations: mreq.body.evaluations },
+      $addToSet: { notes_in_book: mreq.body.notes_in_book },
+    },
+    function (err, result) {
+      if (err) console.error(err);
 
-    if (err) return mres.sendStatus(500);
+      delete mreq.body.students;
+      delete mreq.body.sessions;
+      delete mreq.body.evaluations;
 
-    try {
-      let updatedItem = { ...docs._doc, ...mreq.body };
-      delete updatedItem.password
-      mres.status(200).json(updatedItem);
-    } catch (error) {
-      mres.status(400).json({ message: error });
+      Instructor.findByIdAndUpdate(
+        mreq.params.id,
+        mreq.body,
+        function (err, docs) {
+          if (err) return mres.sendStatus(500);
+
+          try {
+            let updatedItem = { ...docs._doc, ...mreq.body };
+            delete updatedItem.password;
+            mres.status(200).json(updatedItem);
+          } catch (error) {
+            mres.status(400).json({ message: error });
+          }
+        }
+      ).select({ password: 0 });
     }
-  }).select({ password: 0 });
+  );
 }
 
 module.exports = {

@@ -24,7 +24,7 @@ const studentSchema = new Schema({
     default: function () {
       return this.instructor === undefined ? "Pending" : "Active";
     },
-    enum: ["Pending", "Active", "Onhold", "Cancelled"],
+    enum: ["Pending", "Active", "OnHold", "Cancelled"],
   },
   sessions: [{ type: Schema.Types.ObjectId, ref: "Session" }],
   instructor: { type: Schema.Types.ObjectId, ref: "Instructor" },
