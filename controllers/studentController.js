@@ -16,6 +16,7 @@ const students_get_id = (mreq, mres) => {
       is_live: 1,
       room_id: 1,
       recently_reached: 1,
+      attendants: 1,
       _id: 1,
     })
     .select({ password: 0 })
@@ -96,7 +97,7 @@ const students_get = (mreq, mres) => {
         created_at: 1,
         is_live: 1,
         room_id: 1,
-        recently_reached: 1,
+        recently_reached: 1
       })
       .then((filt_insts) => {
         mres.json(filt_insts);
