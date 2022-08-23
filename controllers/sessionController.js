@@ -1,4 +1,6 @@
 const Session = require("../models/sessionSchema");
+const fetch = require("node-fetch");
+const Instructor = require("../models/instructorSchema");
 
 // -------------------- IDS
 
@@ -38,15 +40,19 @@ const sessions_get_id = (mreq, mres) => {
 };
 
 const sessions_put_id = (mreq, mres) => {
-  
-  if(!mreq.body.is_live) delete mreq.body.attendants
-  
+  if ('is_live' in mreq.body && !mreq.body.is_live) delete mreq.body.attendants;
+
   //To mark as attended
-  Session.updateOne(
+  Session.findByIdAndUpdate(
     { _id: mreq.params.id },
-    { $addToSet: { attendants: mreq.body.attendants },  $addToSet: { evaluations: mreq.body.evaluations } },
+    {
+      $addToSet: { attendants: mreq.body.attendants },
+      $push: { evaluations: mreq.body.evaluations },
+    },
     function (err, result) {
       if (err) console.error(err);
+      console.log(result)
+      console.log(mreq.body.attendants, mreq.body.evaluations)
 
       delete mreq.body.attendants;
       delete mreq.body.evaluations;
@@ -86,6 +92,8 @@ const sessions_post = (mreq, mres) => {
     .save()
     .then((res_cat) => {
       mres.json(res_cat);
+      //assign session for every user mentioned
+      //TODO: best practice is to handle members_with_access here to assign session's ID to the users
     })
     .catch((err) => {
       mres.status(500).json({ message: err.message });
@@ -148,19 +156,19 @@ const sessions_get = async (mreq, mres) => {
   }
 };
 
-
-function sessions_post_last(mreq,mres){
-  
-  let listOfUsers = mreq.body.members
-  Session.find({
-        'members_with_access': {  $all :[listOfUsers]}
-    }, function(err, docs){
-      if(err) return mres.sendStatus(404)
-      mres.status(200).json(docs)
-      console.log('reached') 
-    })
+function sessions_post_last(mreq, mres) {
+  let listOfUsers = mreq.body.members;
+  Session.find(
+    {
+      members_with_access: { $all: [listOfUsers] },
+    },
+    function (err, docs) {
+      if (err) return mres.sendStatus(404);
+      mres.status(200).json(docs);
+      console.log("reached");
+    }
+  );
 }
-
 
 module.exports = {
   sessions_get_id,

@@ -204,6 +204,7 @@ function findAndUpdate(mreq, mres) {
     function (err, result) {
       if (err) console.error(err);
 
+      console.log('result',result)
       delete mreq.body.students;
       delete mreq.body.sessions;
       delete mreq.body.evaluations;

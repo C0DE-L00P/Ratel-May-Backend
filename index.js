@@ -109,6 +109,7 @@ app.use("/api/sessions", require("./routes/sessions.js"));
 app.use("/api/students", require("./routes/students.js"));
 app.use("/api/instructors", require("./routes/instructors.js"));
 app.use("/api/feedbacks", require("./routes/feedbacks.js"));
+app.use("/api/contacts", require("./routes/contacts.js"));
 app.use("/api/events", require("./routes/events.js"));
 app.use("/api/auth", require("./routes/auth.js"));
 app.get("*", (mreq, mres) => mres.sendStatus(404));
