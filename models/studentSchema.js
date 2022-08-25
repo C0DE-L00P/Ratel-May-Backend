@@ -3,13 +3,13 @@ const Schema = mongoose.Schema;
 
 //TODO: add other programs support to this schema ex: Noor Bayan and multiprogram subscriptions
 const studentSchema = new Schema({
-  name: { type:     String },
-  age: { type:      Number},
-  gender: { type:   String, enum: ["Male", "Female"] },
-  state: { type:    String },
-  mobile: { type:   String },
-  email: { type:    String},
-  password: { type: String },
+  name: { type:     String, required: true },
+  age: { type:      Number, required: [true, "You must put an age"] },
+  gender: { type:   String, required: true, enum: ["Male", "Female"] },
+  state: { type:    String, required: true },
+  mobile: { type:   String, required: true },
+  email: { type:    String, required: [true, "You must put an email"] },
+  password: { type: String, required: true },
   notes_in_book: [
     {
       page: Number,

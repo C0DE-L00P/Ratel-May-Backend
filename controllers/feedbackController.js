@@ -33,8 +33,8 @@ const feedbacks_get_id = (mreq, mres) => {
     })
     .populate("evaluations.evaluated_by", { name: 1, _id: 1 })
     .populate("evaluations.student", { name: 1, _id: 1 })
-    .then((res) => (res ? mres.json(res):mres.sendStatus(404)))
-    .catch(()=> mres.sendStatus(404))
+    .then((res) => (res ? mres.json(res) : mres.sendStatus(404)))
+    .catch(() => mres.sendStatus(404));
 };
 
 // const feedbacks_put_id = (mreq, mres) => {
@@ -79,7 +79,9 @@ const feedbacks_get = (mreq, mres) => {
       .catch((err) => mres.status(404).json({ message: err }));
   } else {
     //General
-    Feedback.find().then(async (feeds) => mres.json(feeds));
+    Feedback.find().then(async (feeds) => {
+      mres.json(feeds);
+    });
   }
 };
 

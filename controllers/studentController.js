@@ -97,29 +97,36 @@ const students_get = (mreq, mres) => {
         created_at: 1,
         is_live: 1,
         room_id: 1,
-        recently_reached: 1
+        recently_reached: 1,
       })
       .then((filt_insts) => {
         mres.json(filt_insts);
       })
       .catch((err) => mres.status(404).json({ message: err.message }));
-  } 
+  }
   //TO GET LiST of STUDENTS DATA
   // else if(mreq.query.list || mreq.query.List){
   //   Student.find({
   //     '_id': { $in: [
   //         mongoose.Types.ObjectId('4ed3ede8844f0f351100000c'),
-  //         mongoose.Types.ObjectId('4ed3f117a844e0471100000d'), 
+  //         mongoose.Types.ObjectId('4ed3f117a844e0471100000d'),
   //         mongoose.Types.ObjectId('4ed3f18132f50c491100000e')
   //     ]}
   // }, function(err, docs){
   //      console.log(docs);
   // });
   // }
-  else
+  else {
+    const { page = 1, limit = 10 } = mreq.query;
     Student.find()
       .select({ password: 0 })
-      .then((cats) => mres.json(cats));
+      .limit(limit)
+      .skip((page - 1) * limit)
+      .then(async (cats) => {
+        const count = await Student.countDocuments({});
+        mres.json({ data: cats, count });
+      });
+  }
 };
 
 // --------------------- Helper Functions
@@ -188,7 +195,7 @@ function findAndUpdate(mreq, mres) {
   delete mreq.body.old_password;
   delete mreq.body.pin;
 
-  //TODO: maybe there is a way to mix both requests 
+  //TODO: maybe there is a way to mix both requests
   //Add session and notebooks first
   Session.updateOne(
     { _id: mreq.params.id },
@@ -202,8 +209,8 @@ function findAndUpdate(mreq, mres) {
       delete mreq.body.sessions;
       delete mreq.body.notes_in_book;
 
-  //Then update
-      
+      //Then update
+
       Student.findByIdAndUpdate(
         mreq.params.id,
         mreq.body,

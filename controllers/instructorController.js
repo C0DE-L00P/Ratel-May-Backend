@@ -3,7 +3,6 @@ const bcrypt = require("bcrypt");
 const fileSys = require("fs");
 const Session = require("../models/sessionSchema");
 
-
 // -------------------- IDS
 
 const instructors_get_id = async (mreq, mres) => {
@@ -123,10 +122,18 @@ const instructors_get = (mreq, mres) => {
         mres.json(filt_insts[0]);
       })
       .catch((err) => mres.status(404).json({ message: err.message }));
-  } else
+  } else {
+    const { page = 1, limit = 10 } = mreq.query;
+
     Instructor.find()
+      .limit(limit)
+      .skip((page - 1) * limit)
       .select({ password: 0 })
-      .then((cats) => mres.json(cats));
+      .then(async (cats) => {
+        const count = await Instructor.countDocuments({});
+        mres.json({ data: cats, count });
+      });
+  }
 };
 
 //Helper Functions
@@ -190,7 +197,7 @@ function findAndUpdate(mreq, mres) {
   delete mreq.body.email; //Email can't be changed
   delete mreq.body.old_password;
   delete mreq.body.pin;
-  console.log('here',mreq.body)
+  console.log("here", mreq.body);
 
   //if he put a session concat the sessions don't overwrite
   Session.updateOne(
@@ -204,7 +211,7 @@ function findAndUpdate(mreq, mres) {
     function (err, result) {
       if (err) console.error(err);
 
-      console.log('result',result)
+      console.log("result", result);
       delete mreq.body.students;
       delete mreq.body.sessions;
       delete mreq.body.evaluations;

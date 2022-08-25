@@ -1,38 +1,38 @@
 const Event = require("../models/eventSchema");
 const fs = require("fs");
 require("dotenv").config();
+const cloudinary = require("../utils/cloudinary");
 
 // -------------------- IDS
 
 const events_get_id = (mreq, mres) => {
   Event.findById(mreq.params.id)
-  .then((res) => (res ? mres.json(res):mres.sendStatus(404)))
-  .catch(() => mres.sendStatus(404));
+    .then((res) => (res ? mres.json(res) : mres.sendStatus(404)))
+    .catch(() => mres.sendStatus(404));
 };
 
 const events_put_id = (mreq, mres) => {
+  Event.findByIdAndUpdate(mreq.params.id, mreq.body, function (err, docs) {
+    if (err) {
+      mres.sendStatus(500);
+      return;
+    }
 
-    Event.findByIdAndUpdate(mreq.params.id, mreq.body, function (err, docs) {
-      if (err) {
-        mres.sendStatus(500);
-        return;
-      }
+    try {
+      let updatedItem = { ...docs._doc, ...mreq.body };
 
-      try {
-        let updatedItem = { ...docs._doc, ...mreq.body };
+      //Remove old image if the image has been changed
+      if (
+        docs._doc.article_img != updatedItem.article_img &&
+        updatedItem.article_img != undefined
+      )
+        deleteFile(docs._doc.article_img, mres);
 
-        //Remove old image if the image has been changed
-        if (
-          docs._doc.article_img != updatedItem.article_img &&
-          updatedItem.article_img != undefined
-        )
-          deleteFile(docs._doc.article_img, mres);
-
-        mres.status(200).json(updatedItem);
-      } catch (error) {
-        mres.status(400).json({ message: error });
-      }
-    });
+      mres.status(200).json(updatedItem);
+    } catch (error) {
+      mres.status(400).json({ message: error });
+    }
+  });
 };
 
 const events_delete_id = (mreq, mres) => {
@@ -51,22 +51,35 @@ const events_delete_id = (mreq, mres) => {
 
 // --------------------- General
 
-const events_post = (mreq, mres) => {
+const events_post = async (mreq, mres) => {
   //Save the data in the database
-  if (mreq.file != undefined)
-    mreq.body.article_img = mreq.file.path
-      .replaceAll("\\", "/")
-      .replace("public", process.env.BASE_URL);
 
-  const event = new Event(mreq.body);
-  event
-    .save()
-    .then((res_cat) => {
-      mres.json(res_cat);
-    })
-    .catch((err) => {
-      mres.status(500).json({ message: err });
+  console.log("reqqy", mreq.body);
+
+  // if (mreq.file != undefined)
+  //   mreq.body.article_img = mreq.file.path
+  //     .replaceAll("\\", "/")
+  //     .replace("public", process.env.BASE_URL);
+
+  try {
+    const result = await cloudinary.uploader.upload(mreq.body.article_img, {
+      folder: "events",
     });
+    mreq.body.article_img = result.secure_url;
+    const event = new Event(mreq.body);
+
+    event
+      .save()
+      .then((res_cat) => {
+        mres.json(res_cat);
+      })
+      .catch((err) => {
+        mres.status(500).json({ message: err });
+      });
+  } catch (err) {
+    mres.sendStatus(505)
+    console.log(err);
+  }
 };
 
 const events_get = (mreq, mres) => {
@@ -81,7 +94,15 @@ const events_get = (mreq, mres) => {
       .catch((err) => mres.status(409).json({ message: err }));
   } else {
     //General
-    Event.find().then((events) => mres.json(events));
+    const { page = 1, limit = 10 } = mreq.body;
+
+    Event.find()
+      .limit(limit)
+      .skip((page - 1) * limit)
+      .then(async (events) => {
+        const count = await Event.countDocuments({});
+        mres.json({ data: events, count });
+      });
   }
 };
 
