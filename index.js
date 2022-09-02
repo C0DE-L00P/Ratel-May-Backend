@@ -7,16 +7,15 @@ const logger = require("morgan");
 const cors = require("cors");
 
 var corsOptions = {
-  origin: '*',
+  origin: "*",
   optionsSuccessStatus: 200,
-}
+};
 
-app.use(express.static('public'))
-app.use(cors(corsOptions))
+app.use(express.static("public"));
+app.use(cors(corsOptions));
 app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-
 
 // const PORT = process.env.PORT || 5000;
 // const HOST = "0.0.0.0";
@@ -30,12 +29,11 @@ const connectionParams = {
 mongoose
   .connect(url, connectionParams)
   .then(() =>
-    app.listen(process.env.DB_PORT || 1000, () =>
-      console.log("%c Server started", "color: green;")
-    )
+    app.listen(process.env.DB_PORT || 1000, () => {
+      console.log("%c Server started", "color: green;");
+    })
   )
   .catch((err) => console.error(`Error DB. ${err}`));
-
 
 //Video Call API Setup
 
@@ -46,7 +44,6 @@ const headers = {
   "Content-Type": "application/json",
   Authorization: "Bearer " + API_KEY,
 };
-
 
 const getRoom = (room) => {
   return fetch(`https://api.daily.co/v1/rooms/${room}`, {
@@ -60,7 +57,6 @@ const getRoom = (room) => {
     .catch((err) => console.error("error:" + err));
 };
 
-
 const createRoom = (room) => {
   return fetch("https://api.daily.co/v1/rooms", {
     method: "POST",
@@ -72,6 +68,8 @@ const createRoom = (room) => {
         enable_chat: true,
         start_video_off: true,
         start_audio_off: false,
+        enable_network_ui: true,
+        enable_prejoin_ui: false,
         lang: "en",
       },
     }),
@@ -99,9 +97,8 @@ app.get("/video-call/:id", async function (req, res) {
 });
 
 app.get("/video-api-url", function (req, res) {
-  res.json({url: process.env.DAILY_CLIENT_URL})
+  res.json({ url: process.env.DAILY_CLIENT_URL });
 });
-
 
 //Routes
 

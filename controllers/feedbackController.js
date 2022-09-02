@@ -38,7 +38,7 @@ const feedbacks_get_id = (mreq, mres) => {
 };
 
 // const feedbacks_put_id = (mreq, mres) => {
-//   Feedback.findByIdAndUpdate(mreq.params.id, mreq.body, function (err, docs) {
+//   Feedback.findByIdAndUpdate(mreq.params.id, mreq.body,{new: true}, function (err, docs) {
 //   });
 // };
 

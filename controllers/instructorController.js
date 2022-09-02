@@ -197,42 +197,40 @@ function findAndUpdate(mreq, mres) {
   delete mreq.body.email; //Email can't be changed
   delete mreq.body.old_password;
   delete mreq.body.pin;
-  console.log("here", mreq.body);
+
+  //TODO: how to remove student with such mechanism "pull"
 
   //if he put a session concat the sessions don't overwrite
-  Session.updateOne(
-    { _id: mreq.params.id },
+  let temp = {
+    st: mreq.body.students,
+    se: mreq.body.sessions,
+    ev: mreq.body.evaluations,
+    nb: mreq.body.notes_in_book,
+  };
+
+  console.log("type", typeof mreq.body.sessions, "test", mreq.body);
+
+  delete mreq.body.students;
+  delete mreq.body.sessions;
+  delete mreq.body.evaluations;
+  delete mreq.body.notes_in_book;
+
+  Instructor.findByIdAndUpdate(
+    mreq.params.id,
     {
-      $addToSet: { sessions: mreq.body.sessions },
-      $addToSet: { students: mreq.body.students },
-      $addToSet: { evaluations: mreq.body.evaluations },
-      $addToSet: { notes_in_book: mreq.body.notes_in_book },
+      $addToSet: { sessions: temp.se },
+      $addToSet: { students: temp.st },
+      $push: { evaluations: temp.ev },
+      $push: { notes_in_book: temp.nb },
+      ...mreq.body,
     },
-    function (err, result) {
-      if (err) console.error(err);
-
-      console.log("result", result);
-      delete mreq.body.students;
-      delete mreq.body.sessions;
-      delete mreq.body.evaluations;
-
-      Instructor.findByIdAndUpdate(
-        mreq.params.id,
-        mreq.body,
-        function (err, docs) {
-          if (err) return mres.sendStatus(500);
-
-          try {
-            let updatedItem = { ...docs._doc, ...mreq.body };
-            delete updatedItem.password;
-            mres.status(200).json(updatedItem);
-          } catch (error) {
-            mres.status(400).json({ message: error });
-          }
-        }
-      ).select({ password: 0 });
-    }
-  );
+    { new: true }
+    )
+    .select({ password: 0 })
+    .then((res) => {
+      mres.json(res);
+    })
+    .catch((err) => mres.status(418).json({ message: err }));
 }
 
 module.exports = {

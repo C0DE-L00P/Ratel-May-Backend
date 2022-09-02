@@ -26,7 +26,7 @@ const studentSchema = new Schema({
     },
     enum: ["Pending", "Active", "OnHold", "Cancelled"],
   },
-  sessions: [{ type: Schema.Types.ObjectId, ref: "Session" }],
+  sessions:  [{ type: Schema.Types.ObjectId, ref: "Session" }],
   instructor: { type: Schema.Types.ObjectId, ref: "Instructor" },
   program_prefs: {
     type: {

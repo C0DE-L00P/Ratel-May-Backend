@@ -12,7 +12,7 @@ const events_get_id = (mreq, mres) => {
 };
 
 const events_put_id = (mreq, mres) => {
-  Event.findByIdAndUpdate(mreq.params.id, mreq.body, function (err, docs) {
+  Event.findByIdAndUpdate(mreq.params.id, mreq.body,{new: true}, function (err, docs) {
     if (err) {
       mres.sendStatus(500);
       return;

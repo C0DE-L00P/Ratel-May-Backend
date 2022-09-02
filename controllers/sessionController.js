@@ -1,25 +1,15 @@
 const Session = require("../models/sessionSchema");
 const fetch = require("node-fetch");
-const Instructor = require("../models/instructorSchema");
+require("dotenv").config();
 
 // -------------------- IDS
 
 const sessions_get_id = (mreq, mres) => {
   Session.findById(mreq.params.id)
-    // .populate("chat", {
-    //   name: 1,
-    //   email: 1,
-    //   _id: 1,
-    //   //has_whatsapp: 1,
-    //   mobile: 1,
-    //   privileges: 1,
-    //   is_available: 1,
-    // })
     .populate("attendants", {
       name: 1,
       email: 1,
       _id: 1,
-      //has_whatsapp: 1,
       mobile: 1,
       privileges: 1,
       is_available: 1,
@@ -28,7 +18,6 @@ const sessions_get_id = (mreq, mres) => {
       name: 1,
       email: 1,
       _id: 1,
-      //has_whatsapp: 1,
       mobile: 1,
       privileges: 1,
       is_available: 1,
@@ -40,37 +29,46 @@ const sessions_get_id = (mreq, mres) => {
 };
 
 const sessions_put_id = (mreq, mres) => {
-  if ('is_live' in mreq.body && !mreq.body.is_live) delete mreq.body.attendants;
+  if ("is_live" in mreq.body && !mreq.body.is_live) {
+    //Don't accept any more attendants
+    delete mreq.body.attendants;
 
-  //To mark as attended
+    //Delete the room
+    let API_KEY = process.env.DAILY_API_KEY;
+
+    let headers = {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+      Authorization: "Bearer " + API_KEY,
+    };
+
+    fetch(`https://api.daily.co/v1/rooms/${mreq.body.room_id}`, {
+      method: "DELETE",
+      headers,
+    })
+      .then(() => console.log(`room ${mreq.body.room_id} has been deleted`))
+      .catch((err) => console.error("error:" + err));
+  }
+
+  let temp = {
+    at: mreq.body.attendants,
+    ev: mreq.body.evaluations,
+  };
+
+  delete mreq.body.attendants;
+  delete mreq.body.evaluations;
+
   Session.findByIdAndUpdate(
-    { _id: mreq.params.id },
+    mreq.params.id,
     {
-      $addToSet: { attendants: mreq.body.attendants },
-      $push: { evaluations: mreq.body.evaluations },
+      $addToSet: { attendants: temp.at },
+      $push: { evaluations: temp.ev },
+      ...mreq.body,
     },
+    { new: true },
     function (err, result) {
       if (err) console.error(err);
-      console.log(result)
-      console.log(mreq.body.attendants, mreq.body.evaluations)
-
-      delete mreq.body.attendants;
-      delete mreq.body.evaluations;
-
-      Session.findByIdAndUpdate(
-        mreq.params.id,
-        mreq.body,
-        function (err, docs) {
-          if (err) return mres.sendStatus(501);
-
-          try {
-            let updatedItem = { ...docs._doc, ...mreq.body };
-            mres.status(200).json(updatedItem);
-          } catch (error) {
-            mres.status(400).json({ message: error.message });
-          }
-        }
-      );
+      mres.status(200).json(result);
     }
   );
 };
@@ -92,8 +90,29 @@ const sessions_post = (mreq, mres) => {
     .save()
     .then((res_cat) => {
       mres.json(res_cat);
+
+      let arr = res_cat.members_with_access ?? [];
+      let BASE_URL = process.env.BASE_URL;
+
       //assign session for every user mentioned
-      //TODO: best practice is to handle members_with_access here to assign session's ID to the users
+      let assign = (url) =>
+        fetch(url, {
+          method: "PUT",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ sessions: [res_cat._id.toString()] }),
+        }).catch((err) => console.error("ERROR:" + err));
+
+      //FIRST assign for instructor
+      assign(`${BASE_URL}/api/instructors/${res_cat.created_by}`);
+
+      //SECOND assign for students
+      arr.forEach((memberID) => {
+        if (memberID !== res_cat.created_by)
+          assign(`${BASE_URL}/api/students/${memberID}`);
+      });
     })
     .catch((err) => {
       mres.status(500).json({ message: err.message });

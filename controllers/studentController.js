@@ -75,6 +75,7 @@ const students_post = async (mreq, mres) => {
 
     student
       .save()
+      .select({ password: 0 })
       .then((res_cat) => {
         delete res_cat.password;
         console.log("posted student", res_cat);
@@ -191,43 +192,30 @@ async function handlePasswordChange(mreq, mres, email, pin) {
 }
 
 function findAndUpdate(mreq, mres) {
+  let temp = {
+    se: mreq.body.sessions,
+    nb: mreq.body.notes_in_book,
+  };
+
   delete mreq.body.email; //Email can't be changed
   delete mreq.body.old_password;
   delete mreq.body.pin;
+  delete mreq.body.sessions;
+  delete mreq.body.notes_in_book;
 
-  //TODO: maybe there is a way to mix both requests
-  //Add session and notebooks first
-  Session.updateOne(
-    { _id: mreq.params.id },
+  Student.findByIdAndUpdate(
+    mreq.params.id,
     {
-      $addToSet: { sessions: mreq.body.sessions },
-      $addToSet: { notes_in_book: mreq.body.notes_in_book },
+      $addToSet: { sessions: temp.se },
+      $push: { notes_in_book: temp.nb },
+      ...mreq.body,
     },
+    { new: true },
     function (err, result) {
-      if (err) console.error(err);
-
-      delete mreq.body.sessions;
-      delete mreq.body.notes_in_book;
-
-      //Then update
-
-      Student.findByIdAndUpdate(
-        mreq.params.id,
-        mreq.body,
-        function (err, docs) {
-          if (err) return mres.sendStatus(500);
-
-          try {
-            let updatedItem = { ...docs._doc, ...mreq.body };
-            // delete updatedItem.password
-            mres.status(200).json(updatedItem);
-          } catch (error) {
-            mres.status(400).json({ message: error });
-          }
-        }
-      ).select({ password: 0 });
+      if (err) mres.status(500).json({ message: err });
+      mres.status(200).json(result);
     }
-  );
+  ).select({ password: 0 });
 }
 
 module.exports = {
