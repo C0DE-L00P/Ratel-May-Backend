@@ -5,6 +5,9 @@ const fetch = require("node-fetch");
 const app = express();
 const logger = require("morgan");
 const cors = require("cors");
+// const fileupload = require('express-fileupload'); 
+
+// app.use(fileupload({useTempFiles: true}))
 
 var corsOptions = {
   origin: "*",

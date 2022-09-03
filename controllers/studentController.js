@@ -75,7 +75,6 @@ const students_post = async (mreq, mres) => {
 
     student
       .save()
-      .select({ password: 0 })
       .then((res_cat) => {
         delete res_cat.password;
         console.log("posted student", res_cat);

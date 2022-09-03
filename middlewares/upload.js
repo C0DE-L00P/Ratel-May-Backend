@@ -8,7 +8,7 @@ const storage = multer.diskStorage({
     try {
       cb(null, "./public/uploads/");
     } catch (error) {
-      console.error(error);
+      console.error('aaacas',error);
     }
   },
   filename: function (req, file, cb) {
