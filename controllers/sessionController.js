@@ -149,9 +149,14 @@ const sessions_get = async (mreq, mres) => {
       .catch((err) => mres.status(400).json({ message: err.message }));
   } else {
     // General
+    
     //TODO: must be authorized to access all sessions
+    const { page = 1, limit = 10 } = mreq.query;
 
     Session.find()
+      .limit(limit)
+      .skip((page - 1) * limit)
+      .select({ password: 0 })
       .populate("attendants", {
         name: 1,
         email: 1,
@@ -170,7 +175,10 @@ const sessions_get = async (mreq, mres) => {
         privileges: 1,
         is_available: 1,
       })
-      .then((cats) => mres.json(cats))
+      .then(async (cats) => {
+        const count = await Instructor.countDocuments({});
+        mres.json({ data: cats, count });
+      })
       .catch((err) => mres.status(400).json({ message: err.message }));
   }
 };

@@ -1,7 +1,6 @@
 const Instructor = require("../models/instructorSchema");
 const bcrypt = require("bcrypt");
 const fileSys = require("fs");
-const Session = require("../models/sessionSchema");
 
 // -------------------- IDS
 
@@ -98,7 +97,7 @@ const instructors_post = async (mreq, mres) => {
 const instructors_get = (mreq, mres) => {
   if (mreq.query.name || mreq.query.Name) {
     //String Query Param for Search
-    //TODO: add students count and sessions count as seperate fields
+
     let que = mreq.query.Name || mreq.query.name;
     Instructor.find({ name: { $regex: que, $options: "i" } })
       .populate("students", {
@@ -139,7 +138,6 @@ const instructors_get = (mreq, mres) => {
 //Helper Functions
 
 async function handlePasswordChange(mreq, mres, email, pin) {
-  //TODO: a lot of redundency I can do better
 
   if ("old_password" in mreq.body) {
     //1- if he passes the old password
@@ -193,14 +191,7 @@ async function handlePasswordChange(mreq, mres, email, pin) {
   }
 }
 
-function findAndUpdate(mreq, mres) {
-  delete mreq.body.email; //Email can't be changed
-  delete mreq.body.old_password;
-  delete mreq.body.pin;
-
-  //TODO: how to remove student with such mechanism "pull"
-
-  //if he put a session concat the sessions don't overwrite
+async function findAndUpdate(mreq, mres) {
   let temp = {
     st: mreq.body.students,
     se: mreq.body.sessions,
@@ -208,8 +199,17 @@ function findAndUpdate(mreq, mres) {
     nb: mreq.body.notes_in_book,
   };
 
-  console.log("type", typeof mreq.body.sessions, "test", mreq.body);
+  //check if he is removing a student
+  if (mreq.body.is_removing_student) {
+    await Instructor.findByIdAndUpdate(mreq.params.id, {
+      $pull: { students: temp.st },
+    });
+    delete temp.st;
+  }
 
+  delete mreq.body.email; //Email can't be changed
+  delete mreq.body.old_password;
+  delete mreq.body.pin;
   delete mreq.body.students;
   delete mreq.body.sessions;
   delete mreq.body.evaluations;
@@ -225,12 +225,12 @@ function findAndUpdate(mreq, mres) {
       ...mreq.body,
     },
     { new: true }
-    )
+  )
     .select({ password: 0 })
     .then((res) => {
       mres.json(res);
     })
-    .catch((err) => mres.status(418).json({ message: err }));
+    .catch((err) => mres.status(400).json({ message: err }));
 }
 
 module.exports = {

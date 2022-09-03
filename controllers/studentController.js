@@ -2,6 +2,8 @@ const Student = require("../models/studentSchema");
 const bcrypt = require("bcrypt");
 const fileSys = require("fs");
 const Session = require("../models/sessionSchema");
+const fetch = require("node-fetch");
+require('dotenv').config()
 
 // -------------------- IDS
 
@@ -49,8 +51,8 @@ const students_delete_id = (mreq, mres) => {
 // --------------------- General
 
 const students_post = async (mreq, mres) => {
+
   //Check if this email is already registered
-  //TODO: maybe the mongo already has this feature, check that
   let alreadyRegistered = await Student.exists({ email: mreq.body.email });
   if (alreadyRegistered)
     return mres
@@ -70,8 +72,6 @@ const students_post = async (mreq, mres) => {
 
     mreq.body.password = hash;
     const student = new Student(mreq.body);
-
-    //TODO: still send password when creating for the first time
 
     student
       .save()
@@ -132,7 +132,6 @@ const students_get = (mreq, mres) => {
 // --------------------- Helper Functions
 
 async function handlePasswordChange(mreq, mres, email, pin) {
-  //TODO: a lot of redundency I can do better
 
   if ("old_password" in mreq.body) {
     //1- if he passes the old password
@@ -190,11 +189,40 @@ async function handlePasswordChange(mreq, mres, email, pin) {
   }
 }
 
-function findAndUpdate(mreq, mres) {
+async function findAndUpdate(mreq, mres) {
   let temp = {
     se: mreq.body.sessions,
     nb: mreq.body.notes_in_book,
   };
+
+  //Check if he is changing his instructor
+  if("instructor" in mreq.body){
+    console.log('------------------')
+
+    let {instructor} = await Student.findById(mreq.params.id).select({instructor: 1})
+    
+    let BASE_URL = process.env.BASE_URL;
+    let assign = (url,bodyMsg) =>
+    fetch(url, {
+      method: "PUT",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(bodyMsg),
+    }).catch((err) => console.error("ERROR:" + err));
+
+
+    if(instructor.toString() != mreq.body.instructor){
+      console.log('i',instructor.toString(),'s',mreq.params.id)
+
+      //assign session for every user mentioned
+      if(instructor) assign(`${BASE_URL}/api/instructors/${instructor.toString()}`,{ is_removing_student: true, students: [mreq.params.id] });  
+
+      assign(`${BASE_URL}/api/instructors/${mreq.body.instructor}`,{ students: [mreq.params.id] });  
+    }
+
+  }
 
   delete mreq.body.email; //Email can't be changed
   delete mreq.body.old_password;
@@ -212,7 +240,14 @@ function findAndUpdate(mreq, mres) {
     { new: true },
     function (err, result) {
       if (err) mres.status(500).json({ message: err });
-      mres.status(200).json(result);
+
+      // if(instructor && result.instructor !== instructor){
+      //   //Remove the student from the old instructor
+      //   //assign him to the new one
+      // }else{
+
+        mres.status(200).json(result);
+      // }
     }
   ).select({ password: 0 });
 }

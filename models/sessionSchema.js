@@ -38,15 +38,6 @@ const sessionSchema = new Schema({
   ],
   attendants: {type: [Schema.Types.ObjectId], refPath: "model_type" }
 });
-//TODO: evaluations object now uses a lot of queries - embedding data would be best practice for this case
-
-  // chat: [
-  //   {
-  //     message: { type: String },
-  //     date: { type: String, default: Date.now },
-  //     owner: { type: Schema.Types.ObjectId, refPath: "model_type"},
-  //   },
-  // ],
 
 const Session = new mongoose.model("Session", sessionSchema);
 
