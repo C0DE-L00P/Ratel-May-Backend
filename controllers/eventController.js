@@ -1,7 +1,6 @@
 const Event = require("../models/eventSchema");
 const fs = require("fs");
 require("dotenv").config();
-// const cloudinary = require("../utils/cloudinary");
 
 // -------------------- IDS
 
@@ -97,17 +96,6 @@ const events_get = (mreq, mres) => {
         const count = await Event.countDocuments({});
         mres.json({ data: events, count });
       });
-
-      
-  // try {
-  //   const result = await cloudinary.uploader.upload(req.files.image, {
-  //     folder: "events",
-  //   });
-  //   mreq.body.file = result.secure_url;
-  // } catch (err) {
-  //   mres.status(400).json({message: err})
-  //   console.log(err);
-  // }
   }
 };
 

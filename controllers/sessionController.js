@@ -120,18 +120,20 @@ const sessions_post = (mreq, mres) => {
 };
 
 const sessions_get = async (mreq, mres) => {
+  const { page = 1, limit = 10 } = mreq.query;
+
   if (mreq.query.user_id != undefined || mreq.query.userId != undefined) {
     //Query sessions for this specific user
     let que = mreq.query.user_id || mreq.query.userId;
     var ObjectId = await require("mongoose").Types.ObjectId;
-    console.log("thihs", que);
 
     Session.find({ members_with_access: new ObjectId(que) })
+      .limit(limit)
+      .skip((page - 1) * limit)
       .populate("attendants", {
         name: 1,
         email: 1,
         _id: 1,
-        //has_whatsapp: 1,
         mobile: 1,
         privileges: 1,
         is_available: 1,
@@ -140,28 +142,27 @@ const sessions_get = async (mreq, mres) => {
         name: 1,
         email: 1,
         _id: 1,
-        //has_whatsapp: 1,
         mobile: 1,
         privileges: 1,
         is_available: 1,
       })
-      .then((cats) => mres.json(cats))
+      .then(async (cats) => {
+        const count = await Instructor.countDocuments({})
+        mres.json({ data: cats, count });
+      })
       .catch((err) => mres.status(400).json({ message: err.message }));
   } else {
     // General
-    
+
     //TODO: must be authorized to access all sessions
-    const { page = 1, limit = 10 } = mreq.query;
 
     Session.find()
       .limit(limit)
       .skip((page - 1) * limit)
-      .select({ password: 0 })
       .populate("attendants", {
         name: 1,
         email: 1,
         _id: 1,
-        //has_whatsapp: 1,
         mobile: 1,
         privileges: 1,
         is_available: 1,
@@ -170,7 +171,6 @@ const sessions_get = async (mreq, mres) => {
         name: 1,
         email: 1,
         _id: 1,
-        //has_whatsapp: 1,
         mobile: 1,
         privileges: 1,
         is_available: 1,
@@ -183,25 +183,10 @@ const sessions_get = async (mreq, mres) => {
   }
 };
 
-function sessions_post_last(mreq, mres) {
-  let listOfUsers = mreq.body.members;
-  Session.find(
-    {
-      members_with_access: { $all: [listOfUsers] },
-    },
-    function (err, docs) {
-      if (err) return mres.sendStatus(404);
-      mres.status(200).json(docs);
-      console.log("reached");
-    }
-  );
-}
-
 module.exports = {
   sessions_get_id,
   sessions_put_id,
   sessions_delete_id,
   sessions_post,
-  sessions_get,
-  sessions_post_last,
+  sessions_get
 };

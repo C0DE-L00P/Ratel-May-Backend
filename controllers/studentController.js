@@ -1,7 +1,6 @@
 const Student = require("../models/studentSchema");
 const bcrypt = require("bcrypt");
 const fileSys = require("fs");
-const Session = require("../models/sessionSchema");
 const fetch = require("node-fetch");
 require('dotenv').config()
 
@@ -103,20 +102,7 @@ const students_get = (mreq, mres) => {
         mres.json(filt_insts);
       })
       .catch((err) => mres.status(404).json({ message: err.message }));
-  }
-  //TO GET LiST of STUDENTS DATA
-  // else if(mreq.query.list || mreq.query.List){
-  //   Student.find({
-  //     '_id': { $in: [
-  //         mongoose.Types.ObjectId('4ed3ede8844f0f351100000c'),
-  //         mongoose.Types.ObjectId('4ed3f117a844e0471100000d'),
-  //         mongoose.Types.ObjectId('4ed3f18132f50c491100000e')
-  //     ]}
-  // }, function(err, docs){
-  //      console.log(docs);
-  // });
-  // }
-  else {
+  } else {
     const { page = 1, limit = 10 } = mreq.query;
     Student.find()
       .select({ password: 0 })
@@ -197,7 +183,6 @@ async function findAndUpdate(mreq, mres) {
 
   //Check if he is changing his instructor
   if("instructor" in mreq.body){
-    console.log('------------------')
 
     let {instructor} = await Student.findById(mreq.params.id).select({instructor: 1})
     
@@ -212,16 +197,13 @@ async function findAndUpdate(mreq, mres) {
       body: JSON.stringify(bodyMsg),
     }).catch((err) => console.error("ERROR:" + err));
 
-
-    if(instructor.toString() != mreq.body.instructor){
-      console.log('i',instructor.toString(),'s',mreq.params.id)
+    if(instructor != mreq.body.instructor){
 
       //assign session for every user mentioned
       if(instructor) assign(`${BASE_URL}/api/instructors/${instructor.toString()}`,{ is_removing_student: true, students: [mreq.params.id] });  
 
       assign(`${BASE_URL}/api/instructors/${mreq.body.instructor}`,{ students: [mreq.params.id] });  
     }
-
   }
 
   delete mreq.body.email; //Email can't be changed
@@ -240,14 +222,7 @@ async function findAndUpdate(mreq, mres) {
     { new: true },
     function (err, result) {
       if (err) mres.status(500).json({ message: err });
-
-      // if(instructor && result.instructor !== instructor){
-      //   //Remove the student from the old instructor
-      //   //assign him to the new one
-      // }else{
-
         mres.status(200).json(result);
-      // }
     }
   ).select({ password: 0 });
 }
