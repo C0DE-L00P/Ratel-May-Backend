@@ -127,7 +127,7 @@ const sessions_get = async (mreq, mres) => {
     let que = mreq.query.user_id || mreq.query.userId;
     var ObjectId = await require("mongoose").Types.ObjectId;
 
-    Session.find({ members_with_access: new ObjectId(que) })
+    Session.find({ members_with_access: new ObjectId(que) }).sort({date: -1})
       .limit(limit)
       .skip((page - 1) * limit)
       .populate("attendants", {
@@ -150,13 +150,13 @@ const sessions_get = async (mreq, mres) => {
         const count = await Instructor.countDocuments({})
         mres.json({ data: cats, count });
       })
-      .catch((err) => mres.status(400).json({ message: err.message }));
+      .catch((err) => mres.status(404).json({ message: err.message }));
   } else {
     // General
 
     //TODO: must be authorized to access all sessions
 
-    Session.find()
+    Session.find().sort({date: -1})
       .limit(limit)
       .skip((page - 1) * limit)
       .populate("attendants", {
@@ -179,7 +179,7 @@ const sessions_get = async (mreq, mres) => {
         const count = await Instructor.countDocuments({});
         mres.json({ data: cats, count });
       })
-      .catch((err) => mres.status(400).json({ message: err.message }));
+      .catch((err) => mres.status(404).json({ message: err.message }));
   }
 };
 

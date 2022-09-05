@@ -70,6 +70,9 @@ const students_post = async (mreq, mres) => {
     }
 
     mreq.body.password = hash;
+
+    mreq.body.name = capitalizeFirstLetters(mreq.body.name)
+    
     const student = new Student(mreq.body);
 
     student
@@ -89,7 +92,7 @@ const students_get = (mreq, mres) => {
   if (mreq.query.name || mreq.query.Name) {
     //String Query Param for Search
     let que = mreq.query.Name || mreq.query.name;
-    Student.find({ name: { $regex: que, $options: "i" } })
+    Student.find({ name: { $regex: que, $options: "i" } }).sort({name:1})
       .select({ password: 0 })
       .populate("instructor", { name: 1 })
       .populate("sessions", {
@@ -104,7 +107,7 @@ const students_get = (mreq, mres) => {
       .catch((err) => mres.status(404).json({ message: err.message }));
   } else {
     const { page = 1, limit = 10 } = mreq.query;
-    Student.find()
+    Student.find().sort({name:1})
       .select({ password: 0 })
       .limit(limit)
       .skip((page - 1) * limit)
@@ -116,6 +119,14 @@ const students_get = (mreq, mres) => {
 };
 
 // --------------------- Helper Functions
+
+function capitalizeFirstLetters(string) {
+  let arr = string.split(' ')
+  for(let i= 0; i < arr.length ;i++){
+    arr[i] = arr[i].charAt(0).toUpperCase()+arr[i].slice(1)
+  }
+  return arr.join(' ')
+}
 
 async function handlePasswordChange(mreq, mres, email, pin) {
 
@@ -211,6 +222,9 @@ async function findAndUpdate(mreq, mres) {
   delete mreq.body.pin;
   delete mreq.body.sessions;
   delete mreq.body.notes_in_book;
+  
+  if ("name" in mreq.body)
+    mreq.body.name = capitalizeFirstLetters(mreq.body.name);
 
   Student.findByIdAndUpdate(
     mreq.params.id,

@@ -3,12 +3,12 @@ const Schema = mongoose.Schema;
 
 //TODO: add other programs support to this schema ex: Noor Bayan and multiprogram subscriptions
 const studentSchema = new Schema({
-  name: { type:     String, required: true },
-  age: { type:      Number, required: [true, "You must put an age"] },
-  gender: { type:   String, required: true, enum: ["Male", "Female"] },
-  state: { type:    String, required: true },
-  mobile: { type:   String, required: true },
-  email: { type:    String, required: [true, "You must put an email"] },
+  name: { type: String, required: true },
+  age: { type: Number, required: [true, "You must put an age"] },
+  gender: { type: String, required: true, enum: ["Male", "Female"] },
+  state: { type: String, required: true },
+  mobile: { type: String, required: true },
+  email: { type: String, required: [true, "You must put an email"] },
   password: { type: String, required: true },
   notes_in_book: [
     {
@@ -26,7 +26,7 @@ const studentSchema = new Schema({
     },
     enum: ["Pending", "Active", "OnHold", "Cancelled"],
   },
-  sessions:  [{ type: Schema.Types.ObjectId, ref: "Session" }],
+  sessions: [{ type: Schema.Types.ObjectId, ref: "Session" }],
   instructor: { type: Schema.Types.ObjectId, ref: "Instructor" },
   program_prefs: {
     type: {
@@ -53,6 +53,7 @@ const studentSchema = new Schema({
     },
   },
 });
+studentSchema.index({ name: 1 }, { collation: { locale: "en", strength: 1 } });
 
 const Student = new mongoose.model("Student", studentSchema);
 

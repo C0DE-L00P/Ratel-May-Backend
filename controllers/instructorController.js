@@ -78,6 +78,7 @@ const instructors_post = async (mreq, mres) => {
   bcrypt.hash(mreq.body.password, 10, function (err, hash) {
     if (err != null) return mres.status(400).json({ message: err });
     mreq.body.password = hash;
+    mreq.body.name = capitalizeFirstLetters(mreq.body.name);
 
     //Then: Save the data in the database
     const instructor = new Instructor(mreq.body);
@@ -99,7 +100,7 @@ const instructors_get = (mreq, mres) => {
     //String Query Param for Search
 
     let que = mreq.query.Name || mreq.query.name;
-    Instructor.find({ name: { $regex: que, $options: "i" } })
+    Instructor.find({ name: { $regex: que, $options: "i" } }).sort({name:1})
       .populate("students", {
         name: 1,
         email: 1,
@@ -124,7 +125,7 @@ const instructors_get = (mreq, mres) => {
   } else {
     const { page = 1, limit = 10 } = mreq.query;
 
-    Instructor.find()
+    Instructor.find().sort({name:1})
       .limit(limit)
       .skip((page - 1) * limit)
       .select({ password: 0 })
@@ -137,8 +138,15 @@ const instructors_get = (mreq, mres) => {
 
 //Helper Functions
 
-async function handlePasswordChange(mreq, mres, email, pin) {
+function capitalizeFirstLetters(string) {
+  let arr = string.split(" ");
+  for (let i = 0; i < arr.length; i++) {
+    arr[i] = arr[i].charAt(0).toUpperCase() + arr[i].slice(1);
+  }
+  return arr.join(" ");
+}
 
+async function handlePasswordChange(mreq, mres, email, pin) {
   if ("old_password" in mreq.body) {
     //1- if he passes the old password
 
@@ -205,6 +213,7 @@ async function findAndUpdate(mreq, mres) {
       $pull: { students: temp.st },
     });
     delete temp.st;
+    delete mreq.body.is_removing_student;
   }
 
   delete mreq.body.email; //Email can't be changed
@@ -214,6 +223,9 @@ async function findAndUpdate(mreq, mres) {
   delete mreq.body.sessions;
   delete mreq.body.evaluations;
   delete mreq.body.notes_in_book;
+
+  if ("name" in mreq.body)
+    mreq.body.name = capitalizeFirstLetters(mreq.body.name);
 
   Instructor.findByIdAndUpdate(
     mreq.params.id,

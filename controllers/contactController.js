@@ -1,11 +1,12 @@
-const fs = require("fs");
 const Contact = require("../models/contactSchema");
 require("dotenv").config();
 
 // --------------------- General
 
 const contacts_post = (mreq, mres) => {
-  Contact.save()
+  const contact = new Contact(mreq.body);
+
+  contact.save()
     .then((res_cat) => {
       mres.sendStatus(200);
     })
@@ -15,12 +16,12 @@ const contacts_post = (mreq, mres) => {
 };
 
 const contacts_get = (mreq, mres) => {
-  const { page = 1, limit = 10 } = mreq.body;
-  Contact.find()
+  const { page = 1, limit = 10 } = mreq.query;
+  Contact.find().sort({date: -1})
     .limit(limit)
     .skip((page - 1) * limit)
     .then(async (contacts) => {
-      const count = Contact.countDocuments({})
+      const count = await Contact.countDocuments({})
       mres.json({data: contacts,count});
     });
 };

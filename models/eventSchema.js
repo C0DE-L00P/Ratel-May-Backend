@@ -5,7 +5,8 @@ const eventSchema = new Schema({
     date: {type:Date, default: Date.now },
     title:{type: String, required: true},
     content:String,
-    article_img: {type: String,required: true}
+    lang:{type: String, default: 'ar'},
+    article_img: {type: String}
 });
 
 const Event = new mongoose.model("Event", eventSchema);

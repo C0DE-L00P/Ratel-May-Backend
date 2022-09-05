@@ -1,6 +1,7 @@
 const Event = require("../models/eventSchema");
-const fs = require("fs");
+const fileSys = require("fs");
 require("dotenv").config();
+const nodemailer = require("nodemailer");
 
 // -------------------- IDS
 
@@ -68,47 +69,122 @@ const events_post = async (mreq, mres) => {
   event
     .save()
     .then((res_cat) => {
+      //---------------------------------
+      let dateString = res_cat.date.toString();
+      let dateEditted = dateString.split("T")[0];
+
+      var transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: process.env.EMAIL,
+          pass: process.env.MAIL_APP_PASS,
+        },
+      });
+
+      //GET THE LIST OF SUBSCRIPERS to send mails to
+
+      let subscripersList = [];
+      try {
+        subscripersList = JSON.parse(
+          fileSys.readFileSync("utils/subscripersList.json")
+        );
+      } catch (erro) {
+        console.log(erro, "subs", subscripersList);
+      }
+
+      console.log(
+        "our fans",
+        subscripersList,
+        "our post",
+        res_cat,
+        "our date",
+        dateEditted
+      );
+
+      subscripersList.forEach((sub) => {
+        //Mail Format
+
+        var mailOptions = {
+          from: process.env.EMAIL,
+          to: sub,
+          subject: `${res_cat.title}`,
+          html: `
+    <img src="http://localhost:5000/uploads/1662208739097.webp" alt="Post Image" style="maxHieght: 160px">
+    <br>
+    ${res_cat.article_img}
+          <h1>${res_cat.title}</h1>
+          <p style="font-size:12px; color: grey;">${dateEditted}</p>
+    <br>
+    <p">
+    ${res_cat.content}</p>
+    <br>
+    <br>
+    ${process.env.FRONT_BASE_URL + "/events"}
+    <br>
+    `,
+        };
+
+        //Send Mail
+        transporter.sendMail(mailOptions, function (error, info) {
+          if (error) return console.log("error when sent emails", error);
+          console.log("emails sent");
+        });
+      });
+
+      //-----------------------------------
+
       mres.json(res_cat);
     })
     .catch((err) => {
+      console.error("errorororor", err);
       mres.status(500).json({ message: err });
     });
 };
 
 const events_get = (mreq, mres) => {
-  if (mreq.query.limit != undefined || mreq.query.Limit != undefined) {
-    //String Query Param for limiting results
-    let que = mreq.query.limit || mreq.query.Limit;
-    Event.find()
-      .limit(que)
-      .then((filt_events) => {
-        mres.json(filt_events);
-      })
-      .catch((err) => mres.status(409).json({ message: err }));
-  } else {
-    //General
-    const { page = 1, limit = 10 } = mreq.body;
+  //General
+  const { page = 1, limit = 10 } = mreq.query;
 
-    Event.find()
-      .limit(limit)
-      .skip((page - 1) * limit)
-      .then(async (events) => {
-        const count = await Event.countDocuments({});
-        mres.json({ data: events, count });
-      });
-  }
+  Event.find().sort({date: -1})
+    .limit(limit)
+    .skip((page - 1) * limit)
+    .then(async (events) => {
+      const count = await Event.countDocuments({});
+      mres.json({ data: events, count });
+    });
 };
 
 //Helper Function
 
 function deleteFile(path, mres) {
   if (path != undefined)
-    fs.unlink(path, (err) => {
+    fileSys.unlink(path, (err) => {
       if (err) {
         return false;
       }
     });
 }
+
+const events_post_subscripe = (mreq, mres) => {
+  let email = mreq.body.email;
+  let subscripersList = new Set([]);
+  try {
+    subscripersList = new Set(
+      JSON.parse(fileSys.readFileSync("utils/subscripersList.json"))
+    );
+  } catch (erro) {
+    console.log(erro, "subs", subscripersList);
+  }
+
+  subscripersList.add(email);
+
+  fileSys.writeFileSync(
+    "utils/subscripersList.json",
+    JSON.stringify(Array.from(subscripersList))
+  );
+
+  mres.sendStatus(200);
+};
 
 module.exports = {
   events_get_id,
@@ -116,4 +192,5 @@ module.exports = {
   events_delete_id,
   events_post,
   events_get,
+  events_post_subscripe,
 };

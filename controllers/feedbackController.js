@@ -72,7 +72,7 @@ const feedbacks_get = (mreq, mres) => {
   ) {
     //String Query Param for Search
     let que = mreq.query.Instructor || mreq.query.instructor;
-    Feedback.find({ instructor: que })
+    Feedback.find({ instructor: que }).sort({date: -1})
       .then((filt_feeds) => {
         mres.json(filt_feeds);
       })
