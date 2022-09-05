@@ -1,6 +1,8 @@
 const Session = require("../models/sessionSchema");
 const fetch = require("node-fetch");
+const Instructor = require("../models/instructorSchema");
 require("dotenv").config();
+
 
 // -------------------- IDS
 

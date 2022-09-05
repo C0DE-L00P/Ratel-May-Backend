@@ -123,6 +123,7 @@ const instructors_get = (mreq, mres) => {
       })
       .catch((err) => mres.status(404).json({ message: err.message }));
   } else {
+    
     const { page = 1, limit = 10 } = mreq.query;
 
     Instructor.find().sort({name:1})
