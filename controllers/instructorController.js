@@ -100,7 +100,8 @@ const instructors_get = (mreq, mres) => {
     //String Query Param for Search
 
     let que = mreq.query.Name || mreq.query.name;
-    Instructor.find({ name: { $regex: que, $options: "i" } }).sort({name:1})
+    Instructor.find({ name: { $regex: que, $options: "i" } })
+      .sort({ name: 1 })
       .populate("students", {
         name: 1,
         email: 1,
@@ -123,10 +124,10 @@ const instructors_get = (mreq, mres) => {
       })
       .catch((err) => mres.status(404).json({ message: err.message }));
   } else {
-    
     const { page = 1, limit = 10 } = mreq.query;
 
-    Instructor.find().sort({name:1})
+    Instructor.find()
+      .sort({ name: 1 })
       .limit(limit)
       .skip((page - 1) * limit)
       .select({ password: 0 })
@@ -202,8 +203,8 @@ async function handlePasswordChange(mreq, mres, email, pin) {
 
 async function findAndUpdate(mreq, mres) {
   let temp = {
-    st: mreq.body.students,
     se: mreq.body.sessions,
+    st: mreq.body.students,
     ev: mreq.body.evaluations,
     nb: mreq.body.notes_in_book,
   };
@@ -227,14 +228,13 @@ async function findAndUpdate(mreq, mres) {
 
   if ("name" in mreq.body)
     mreq.body.name = capitalizeFirstLetters(mreq.body.name);
+  console.log("sessions", temp.se, typeof temp.se);
 
   Instructor.findByIdAndUpdate(
     mreq.params.id,
     {
-      $addToSet: { sessions: temp.se },
-      $addToSet: { students: temp.st },
-      $push: { evaluations: temp.ev },
-      $push: { notes_in_book: temp.nb },
+      $addToSet: { students: temp.st, sessions: temp.se },
+      $push: { evaluations: temp.ev, notes_in_book: temp.nb },
       ...mreq.body,
     },
     { new: true }

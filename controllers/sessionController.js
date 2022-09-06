@@ -3,7 +3,6 @@ const fetch = require("node-fetch");
 const Instructor = require("../models/instructorSchema");
 require("dotenv").config();
 
-
 // -------------------- IDS
 
 const sessions_get_id = (mreq, mres) => {
@@ -129,7 +128,8 @@ const sessions_get = async (mreq, mres) => {
     let que = mreq.query.user_id || mreq.query.userId;
     var ObjectId = await require("mongoose").Types.ObjectId;
 
-    Session.find({ members_with_access: new ObjectId(que) }).sort({date: -1})
+    Session.find({ members_with_access: new ObjectId(que) })
+      .sort({ created_at: -1 })
       .limit(limit)
       .skip((page - 1) * limit)
       .populate("attendants", {
@@ -149,7 +149,7 @@ const sessions_get = async (mreq, mres) => {
         is_available: 1,
       })
       .then(async (cats) => {
-        const count = await Session.countDocuments({})
+        const count = await Session.countDocuments({});
         mres.json({ data: cats, count });
       })
       .catch((err) => mres.status(404).json({ message: err.message }));
@@ -158,7 +158,8 @@ const sessions_get = async (mreq, mres) => {
 
     //TODO: must be authorized to access all sessions
 
-    Session.find().sort({date: -1})
+    Session.find()
+      .sort({ created_at: -1 })
       .limit(limit)
       .skip((page - 1) * limit)
       .populate("attendants", {
@@ -190,5 +191,5 @@ module.exports = {
   sessions_put_id,
   sessions_delete_id,
   sessions_post,
-  sessions_get
+  sessions_get,
 };
