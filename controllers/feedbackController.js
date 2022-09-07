@@ -4,20 +4,10 @@ const Feedback = require("../models/feedbackSchema");
 
 const feedbacks_get_id = (mreq, mres) => {
   Feedback.findById(mreq.params.id)
-    // .populate("chat", {
-    //   name: 1,
-    //   email: 1,
-    //   _id: 1,
-    //   //has_whatsapp: 1,
-    //   mobile: 1,
-    //   privileges: 1,
-    //   is_available: 1,
-    // })
     .populate("attendants", {
       name: 1,
       email: 1,
       _id: 1,
-      //has_whatsapp: 1,
       mobile: 1,
       privileges: 1,
       is_available: 1,
@@ -26,7 +16,6 @@ const feedbacks_get_id = (mreq, mres) => {
       name: 1,
       email: 1,
       _id: 1,
-      //has_whatsapp: 1,
       mobile: 1,
       privileges: 1,
       is_available: 1,
@@ -39,13 +28,15 @@ const feedbacks_get_id = (mreq, mres) => {
 
 // const feedbacks_put_id = (mreq, mres) => {
 //   Feedback.findByIdAndUpdate(mreq.params.id, mreq.body,{new: true}, function (err, docs) {
+//     if (err) return mres.sendStatus(404);
+//     mres.json(docs);
 //   });
 // };
 
 // const feedbacks_delete_id = (mreq, mres) => {
 //   Feedback.findByIdAndDelete(mreq.params.id, function (err) {
-//     if (err) mres.sendStatus(404);
-//     else mres.sendStatus(200);
+//     if (err) return mres.sendStatus(404);
+//     mres.sendStatus(200);
 //   });
 // };
 

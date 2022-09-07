@@ -1,5 +1,21 @@
 const Contact = require("../models/contactSchema");
-require("dotenv").config();
+
+// --------------------- Id
+
+const contacts_put_id = (mreq, mres) => {
+  Feedback.findByIdAndUpdate(mreq.params.id, mreq.body,{new: true}, function (err, docs) {
+    if(err) return mres.status(400).json({message: err})
+    mres.status(200).json(docs)
+  });
+};
+
+const contacts_delete_id = (mreq, mres) => {
+  Feedback.findByIdAndDelete(mreq.params.id, function (err) {
+    if (err) return mres.sendStatus(404)
+    mres.sendStatus(200);
+  });
+};
+
 
 // --------------------- General
 
@@ -7,7 +23,7 @@ const contacts_post = (mreq, mres) => {
   const contact = new Contact(mreq.body);
 
   contact.save()
-    .then((res_cat) => {
+    .then(() => {
       mres.sendStatus(200);
     })
     .catch((err) => {
@@ -27,6 +43,8 @@ const contacts_get = (mreq, mres) => {
 };
 
 module.exports = {
+  contacts_put_id,
+  contacts_delete_id,
   contacts_get,
   contacts_post,
 };

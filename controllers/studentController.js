@@ -102,7 +102,9 @@ const students_get = (mreq, mres) => {
         recently_reached: 1,
       })
       .then((filt_insts) => {
-        mres.json(filt_insts);
+        const count = filt_insts?.length;
+        console.log('count',count)
+        mres.json({data: filt_insts, count});
       })
       .catch((err) => mres.status(404).json({ message: err.message }));
   } else {
@@ -112,7 +114,8 @@ const students_get = (mreq, mres) => {
       .limit(limit)
       .skip((page - 1) * limit)
       .then(async (cats) => {
-        const count = await Student.countDocuments({});
+        const count = cats?.length;
+        console.log('count',count)
         mres.json({ data: cats, count });
       });
   }

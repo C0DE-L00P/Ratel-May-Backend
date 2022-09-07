@@ -181,22 +181,18 @@ async function handlePasswordChange(mreq, mres, email, pin) {
 
       if (pinsList[email].pin == pin) {
         //check the pin one more time
-        console.log("pinned 3");
         mreq.body.password = await bcrypt.hash(mreq.body.password, 10);
-        console.log("pinned 4");
 
         //Alright now delete this pin from local
         pinsList = JSON.parse(fileSys.readFileSync("utils/pinsList.json"));
         delete pinsList[email];
         fileSys.writeFileSync("utils/pinsList.json", JSON.stringify(pinsList));
 
-        console.log("pinned 5");
         findAndUpdate(mreq, mres);
       } else mres.status(409).json({ message: "PIN is incorrect" });
     } else {
       delete mreq.body.password; //3- Passes non of them then not allowed to change pass
       findAndUpdate(mreq, mres);
-      console.log("pinned 6");
     }
   }
 }

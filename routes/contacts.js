@@ -6,6 +6,11 @@ const authorized = require('../middlewares/authorized')
 const upload = require('../middlewares/upload')
 
 router
+  .route("/:id")
+  .put(contactController.contacts_put_id)
+  .delete(contactController.contacts_delete_id)
+
+router
   .route("")
   .post(contactController.contacts_post)
   .get(contactController.contacts_get);
