@@ -2,7 +2,7 @@ const Student = require("../models/studentSchema");
 const bcrypt = require("bcrypt");
 const fileSys = require("fs");
 const fetch = require("node-fetch");
-require('dotenv').config()
+require("dotenv").config();
 
 // -------------------- IDS
 
@@ -50,7 +50,6 @@ const students_delete_id = (mreq, mres) => {
 // --------------------- General
 
 const students_post = async (mreq, mres) => {
-
   //Check if this email is already registered
   let alreadyRegistered = await Student.exists({ email: mreq.body.email });
   if (alreadyRegistered)
@@ -71,8 +70,8 @@ const students_post = async (mreq, mres) => {
 
     mreq.body.password = hash;
 
-    mreq.body.name = capitalizeFirstLetters(mreq.body.name)
-    
+    mreq.body.name = capitalizeFirstLetters(mreq.body.name);
+
     const student = new Student(mreq.body);
 
     student
@@ -92,7 +91,8 @@ const students_get = (mreq, mres) => {
   if (mreq.query.name || mreq.query.Name) {
     //String Query Param for Search
     let que = mreq.query.Name || mreq.query.name;
-    Student.find({ name: { $regex: que, $options: "i" } }).sort({name:1})
+    Student.find({ name: { $regex: que, $options: "i" } })
+      .sort({ name: 1 })
       .select({ password: 0 })
       .populate("instructor", { name: 1 })
       .populate("sessions", {
@@ -103,19 +103,19 @@ const students_get = (mreq, mres) => {
       })
       .then((filt_insts) => {
         const count = filt_insts?.length;
-        console.log('count',count)
-        mres.json({data: filt_insts, count});
+        mres.json({ data: filt_insts, count });
       })
       .catch((err) => mres.status(404).json({ message: err.message }));
   } else {
     const { page = 1, limit = 10 } = mreq.query;
-    Student.find().sort({name:1})
+    Student.find()
+      .sort({ name: 1 })
       .select({ password: 0 })
       .limit(limit)
       .skip((page - 1) * limit)
       .then(async (cats) => {
         const count = cats?.length;
-        console.log('count',count)
+        console.log("count", count);
         mres.json({ data: cats, count });
       });
   }
@@ -124,15 +124,14 @@ const students_get = (mreq, mres) => {
 // --------------------- Helper Functions
 
 function capitalizeFirstLetters(string) {
-  let arr = string.split(' ')
-  for(let i= 0; i < arr.length ;i++){
-    arr[i] = arr[i].charAt(0).toUpperCase()+arr[i].slice(1)
+  let arr = string.split(" ");
+  for (let i = 0; i < arr.length; i++) {
+    arr[i] = arr[i].charAt(0).toUpperCase() + arr[i].slice(1);
   }
-  return arr.join(' ')
+  return arr.join(" ");
 }
 
 async function handlePasswordChange(mreq, mres, email, pin) {
-
   if ("old_password" in mreq.body) {
     //1- if he passes the old password
 
@@ -196,27 +195,33 @@ async function findAndUpdate(mreq, mres) {
   };
 
   //Check if he is changing his instructor
-  if("instructor" in mreq.body){
+  if ("instructor" in mreq.body) {
+    let { instructor } = await Student.findById(mreq.params.id).select({
+      instructor: 1,
+    });
 
-    let {instructor} = await Student.findById(mreq.params.id).select({instructor: 1})
-    
     let BASE_URL = process.env.BASE_URL;
-    let assign = (url,bodyMsg) =>
-    fetch(url, {
-      method: "PUT",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(bodyMsg),
-    }).catch((err) => console.error("ERROR:" + err));
+    let assign = (url, bodyMsg) =>
+      fetch(url, {
+        method: "PUT",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(bodyMsg),
+      }).catch((err) => console.error("ERROR:" + err));
 
-    if(instructor != mreq.body.instructor){
-
+    if (instructor != mreq.body.instructor) {
       //assign session for every user mentioned
-      if(instructor) assign(`${BASE_URL}/api/instructors/${instructor.toString()}`,{ is_removing_student: true, students: [mreq.params.id] });  
+      if (instructor)
+        assign(`${BASE_URL}/api/instructors/${instructor.toString()}`, {
+          is_removing_student: true,
+          students: mreq.params.id,
+        });
 
-      assign(`${BASE_URL}/api/instructors/${mreq.body.instructor}`,{ students: [mreq.params.id] });  
+      assign(`${BASE_URL}/api/instructors/${mreq.body.instructor}`, {
+        students: [mreq.params.id],
+      });
     }
   }
 
@@ -225,7 +230,7 @@ async function findAndUpdate(mreq, mres) {
   delete mreq.body.pin;
   delete mreq.body.sessions;
   delete mreq.body.notes_in_book;
-  
+
   if ("name" in mreq.body)
     mreq.body.name = capitalizeFirstLetters(mreq.body.name);
 
@@ -239,7 +244,7 @@ async function findAndUpdate(mreq, mres) {
     { new: true },
     function (err, result) {
       if (err) mres.status(500).json({ message: err });
-        mres.status(200).json(result);
+      mres.status(200).json(result);
     }
   ).select({ password: 0 });
 }

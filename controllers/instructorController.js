@@ -120,7 +120,8 @@ const instructors_get = (mreq, mres) => {
             .status(404)
             .json({ message: "No instructor found with such a name" });
 
-        mres.json(filt_insts[0]);
+        const count = filt_insts?.length;
+        mres.json({ data: filt_insts, count });
       })
       .catch((err) => mres.status(404).json({ message: err.message }));
   } else {
@@ -224,7 +225,6 @@ async function findAndUpdate(mreq, mres) {
 
   if ("name" in mreq.body)
     mreq.body.name = capitalizeFirstLetters(mreq.body.name);
-  console.log("sessions", temp.se, typeof temp.se);
 
   Instructor.findByIdAndUpdate(
     mreq.params.id,
