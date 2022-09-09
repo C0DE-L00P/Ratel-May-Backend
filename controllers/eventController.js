@@ -109,13 +109,12 @@ const events_post = async (mreq, mres) => {
           to: sub,
           subject: `${res_cat.title}`,
           html: `
-    <img src="http://localhost:5000/uploads/1662208739097.webp" alt="Post Image" style="maxHieght: 160px">
+    <img src="${res_cat.article_img}" alt="Post Image" style="maxHieght: 160px">
     <br>
-    ${res_cat.article_img}
           <h1>${res_cat.title}</h1>
           <p style="font-size:12px; color: grey;">${dateEditted}</p>
     <br>
-    <p">
+    <p style="white-space: pre-line;">
     ${res_cat.content}</p>
     <br>
     <br>

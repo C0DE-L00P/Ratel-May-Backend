@@ -30,6 +30,7 @@ const sessions_get_id = (mreq, mres) => {
 };
 
 const sessions_put_id = (mreq, mres) => {
+  
   if ("is_live" in mreq.body && !mreq.body.is_live) {
     //Don't accept any more attendants
     delete mreq.body.attendants;
@@ -62,8 +63,7 @@ const sessions_put_id = (mreq, mres) => {
   Session.findByIdAndUpdate(
     mreq.params.id,
     {
-      $addToSet: { attendants: temp.at },
-      $push: { evaluations: temp.ev },
+      $addToSet: { attendants: temp.at, evaluations: temp.ev },
       ...mreq.body,
     },
     { new: true },
@@ -150,7 +150,7 @@ const sessions_get = async (mreq, mres) => {
       })
       .then(async (cats) => {
         const count = cats?.length;
-        console.log('count', count)
+        console.log("count", count);
         mres.json({ data: cats, count });
       })
       .catch((err) => mres.status(404).json({ message: err.message }));
