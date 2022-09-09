@@ -2,6 +2,13 @@ const Contact = require("../models/contactSchema");
 
 // --------------------- Id
 
+const contacts_get_id = (mreq, mres) => {
+  Contact.findById(mreq.params.id)
+    .then((res) => (res ? mres.json(res) : mres.sendStatus(404)))
+    .catch(() => mres.sendStatus(404));
+};
+
+
 const contacts_put_id = (mreq, mres) => {
   Feedback.findByIdAndUpdate(mreq.params.id, mreq.body,{new: true}, function (err, docs) {
     if(err) return mres.status(400).json({message: err})
@@ -43,6 +50,7 @@ const contacts_get = (mreq, mres) => {
 };
 
 module.exports = {
+  contacts_get_id,
   contacts_put_id,
   contacts_delete_id,
   contacts_get,

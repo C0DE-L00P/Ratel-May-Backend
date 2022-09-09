@@ -7,6 +7,7 @@ const upload = require('../middlewares/upload')
 
 router
   .route("/:id")
+  .get(contactController.contacts_get_id)
   .put(contactController.contacts_put_id)
   .delete(contactController.contacts_delete_id)
 
