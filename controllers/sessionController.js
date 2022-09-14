@@ -30,7 +30,6 @@ const sessions_get_id = (mreq, mres) => {
 };
 
 const sessions_put_id = (mreq, mres) => {
-  
   if ("is_live" in mreq.body && !mreq.body.is_live) {
     //Don't accept any more attendants
     delete mreq.body.attendants;
@@ -60,10 +59,11 @@ const sessions_put_id = (mreq, mres) => {
   delete mreq.body.attendants;
   delete mreq.body.evaluations;
 
-  Session.findByIdAndUpdate(
-    mreq.params.id,
+  Session.updateOne(
+    { _id: mreq.params.id, "evaluations.student": { $ne: temp.ev?.student } },
     {
-      $addToSet: { attendants: temp.at, evaluations: temp.ev },
+      $push: { evaluations: temp.ev },
+      $addToSet: { attendants: temp.at},
       ...mreq.body,
     },
     { new: true },

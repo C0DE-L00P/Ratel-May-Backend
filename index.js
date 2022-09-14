@@ -5,7 +5,8 @@ const fetch = require("node-fetch");
 const app = express();
 const logger = require("morgan");
 const cors = require("cors");
-// const fileupload = require('express-fileupload'); 
+const Util = require("./models/utilSchema.js");
+// const fileupload = require('express-fileupload');
 
 // app.use(fileupload({useTempFiles: true}))
 
@@ -17,8 +18,8 @@ var corsOptions = {
 app.use(express.static("public"));
 app.use(cors(corsOptions));
 app.use(logger("dev"));
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(express.json({limit: '50mb'}));
+app.use(express.urlencoded({ limit: '50mb',extended: true }));
 
 // const PORT = process.env.PORT || 5000;
 // const HOST = "0.0.0.0";
@@ -32,7 +33,7 @@ const connectionParams = {
 mongoose
   .connect(url, connectionParams)
   .then(() =>
-    app.listen(process.env.DB_PORT || 1000, () => {
+    app.listen(process.env.DB_PORT || 1000, async () => {
       console.log("%c Server started", "color: green;");
     })
   )

@@ -30,7 +30,7 @@ const sessionSchema = new Schema({
   evaluations: [
     {
       evaluated_by: { type: Schema.Types.ObjectId, ref: "Instructor" },
-      student: { type: Schema.Types.ObjectId, ref: "Student"},
+      student: { type: Schema.Types.ObjectId, ref: "Student", unique: true},
       previously_eval: Number,
       current_eval: Number,
       notes: String,

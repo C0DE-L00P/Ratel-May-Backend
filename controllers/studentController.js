@@ -2,6 +2,7 @@ const Student = require("../models/studentSchema");
 const bcrypt = require("bcrypt");
 const fileSys = require("fs");
 const fetch = require("node-fetch");
+const Util = require("../models/utilSchema");
 require("dotenv").config();
 
 // -------------------- IDS
@@ -78,7 +79,6 @@ const students_post = async (mreq, mres) => {
       .save()
       .then((res_cat) => {
         delete res_cat.password;
-        console.log("posted student", res_cat);
         mres.json(res_cat);
       })
       .catch((err) => {
@@ -115,7 +115,6 @@ const students_get = (mreq, mres) => {
       .skip((page - 1) * limit)
       .then(async (cats) => {
         const count = cats?.length;
-        console.log("count", count);
         mres.json({ data: cats, count });
       });
   }
@@ -148,7 +147,6 @@ async function handlePasswordChange(mreq, mres, email, pin) {
             .status(401)
             .json({ message: "Credentials are incorrect" });
         mreq.body.password = await bcrypt.hash(mreq.body.password, 10);
-        console.log("1 pass", mreq.body.password);
         findAndUpdate(mreq, mres);
       }
     );
@@ -156,34 +154,29 @@ async function handlePasswordChange(mreq, mres, email, pin) {
     if ("pin" in mreq.body) {
       //2- if he passes a pin code sent for his email
 
-      console.log("pinned 1");
       let pinsList = {};
       try {
-        pinsList = JSON.parse(fileSys.readFileSync("utils/pinsList.json"));
+        let resu = await Util.findOne().lean();
+        pinsList = resu.pinsList;
       } catch (err) {}
 
-      if (!(email in pinsList)) return mres.sendStatus(401);
+      let emailKey = email.replaceAll(".", "#");
+      if (!(emailKey in pinsList)) return mres.sendStatus(401);
 
-      console.log("pinned 2");
+      if (pinsList[emailKey].pin == pin) {
 
-      if (pinsList[email].pin == pin) {
         //check the pin one more time
-        console.log("pinned 3");
         mreq.body.password = await bcrypt.hash(mreq.body.password, 10);
-        console.log("pinned 4");
+        let resu = await Util.findOne().lean();
+        pinsList = resu.pinsList;
+        delete pinsList[emailKey];
+        Util.updateOne({_id: "632053d485bfa440b6b689db"}, { $set: { pinsList: pinsList } }).exec();
 
-        //Alright now delete this pin from local
-        pinsList = JSON.parse(fileSys.readFileSync("utils/pinsList.json"));
-        delete pinsList[email];
-        fileSys.writeFileSync("utils/pinsList.json", JSON.stringify(pinsList));
-
-        console.log("pinned 5");
         findAndUpdate(mreq, mres);
       } else mres.status(409).json({ message: "PIN is incorrect" });
     } else {
       delete mreq.body.password; //3- Passes non of them then not allowed to change pass
       findAndUpdate(mreq, mres);
-      console.log("pinned 6");
     }
   }
 }

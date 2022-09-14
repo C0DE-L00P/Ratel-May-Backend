@@ -8,16 +8,15 @@ const contacts_get_id = (mreq, mres) => {
     .catch(() => mres.sendStatus(404));
 };
 
-
 const contacts_put_id = (mreq, mres) => {
-  Feedback.findByIdAndUpdate(mreq.params.id, mreq.body,{new: true}, function (err, docs) {
+  Contact.findByIdAndUpdate(mreq.params.id, mreq.body,{new: true}, function (err, docs) {
     if(err) return mres.status(400).json({message: err})
     mres.status(200).json(docs)
   });
 };
 
 const contacts_delete_id = (mreq, mres) => {
-  Feedback.findByIdAndDelete(mreq.params.id, function (err) {
+  Contact.findByIdAndDelete(mreq.params.id, function (err) {
     if (err) return mres.sendStatus(404)
     mres.sendStatus(200);
   });

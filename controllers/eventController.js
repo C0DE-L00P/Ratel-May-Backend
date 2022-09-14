@@ -2,6 +2,8 @@ const Event = require("../models/eventSchema");
 const fileSys = require("fs");
 require("dotenv").config();
 const nodemailer = require("nodemailer");
+const Util = require("../models/utilSchema");
+const { cloudinary } = require("../utils/cloudinary");
 
 // -------------------- IDS
 
@@ -59,92 +61,94 @@ const events_delete_id = (mreq, mres) => {
 const events_post = async (mreq, mres) => {
   //Save the data in the database
 
-  if (mreq.file != undefined)
-    mreq.body.article_img = mreq.file.path
-      .replaceAll("\\", "/")
-      .replace("public", process.env.BASE_URL);
-
-  const event = new Event(mreq.body);
-
-  event
-    .save()
-    .then((res_cat) => {
-      //---------------------------------
-      let dateString = res_cat.date.toString();
-      let dateEditted = dateString.split("T")[0];
-
-      var transporter = nodemailer.createTransport({
-        service: "gmail",
-        auth: {
-          user: process.env.EMAIL,
-          pass: process.env.MAIL_APP_PASS,
-        },
-      });
-
-      //GET THE LIST OF SUBSCRIPERS to send mails to
-
-      let subscripersList = [];
-      try {
-        subscripersList = JSON.parse(
-          fileSys.readFileSync("utils/subscripersList.json")
-        );
-      } catch (erro) {
-        console.log(erro, "subs", subscripersList);
-      }
-
-      console.log(
-        "our fans",
-        subscripersList,
-        "our post",
-        res_cat,
-        "our date",
-        dateEditted
-      );
-
-      subscripersList.forEach((sub) => {
-        //Mail Format
-
-        var mailOptions = {
-          from: process.env.EMAIL,
-          to: sub,
-          subject: `${res_cat.title}`,
-          html: `
-    <img src="${res_cat.article_img}" alt="Post Image" style="maxHieght: 160px">
-    <br>
-          <h1>${res_cat.title}</h1>
-          <p style="font-size:12px; color: grey;">${dateEditted}</p>
-    <br>
-    <p style="white-space: pre-line;">
-    ${res_cat.content}</p>
-    <br>
-    <br>
-    ${process.env.FRONT_BASE_URL + "/events"}
-    <br>
-    `,
-        };
-
-        //Send Mail
-        transporter.sendMail(mailOptions, function (error, info) {
-          if (error) return console.log("error when sent emails", error);
-          console.log("emails sent");
-        });
-      });
-
-      //-----------------------------------
-
-      mres.json(res_cat);
-    })
-    .catch((err) => {
-      console.error("errorororor", err);
-      mres.status(500).json({ message: err });
+  try {
+    const fileStr = mreq.body.article_img;
+    const uploadedResponse = await cloudinary.uploader.upload(fileStr, {
+      upload_preset: "ratel_events",
     });
+    mreq.body.article_img = uploadedResponse.url
+    
+    const event = new Event(mreq.body);
+
+    event
+      .save()
+      .then(async (res_cat) => {
+        
+        //---------------------------------
+        let dateString = res_cat.date.toString();
+        let dateEditted = dateString.split("T")[0];
+
+        var transporter = nodemailer.createTransport({
+          service: "gmail",
+          auth: {
+            user: process.env.EMAIL,
+            pass: process.env.MAIL_APP_PASS,
+          },
+        });
+
+        //GET THE LIST OF SUBSCRIPERS to send mails to
+        //TODO: check if this is working as it should
+
+        Util.findOne()
+          .lean()
+          .then(({ subscripersList }) => {
+            subscripersList = subscripersList?? []
+            mres.sendStatus(200)
+
+            subscripersList.forEach((sub) => {
+              console.log("our fans", subscripersList);
+
+              //Mail Format
+
+              var mailOptions = {
+                from: process.env.EMAIL,
+                to: sub,
+                subject: `${res_cat.title}`,
+                html: `
+    <div alt="Post Image" style="height: 240px;width: 100%;background-image: url('${res_cat.article_img}'); background-size: cover;"></div>
+                <br>
+                      <h1>${res_cat.title}</h1>
+                      <p style="font-size:12px; color: grey;">${dateEditted}</p>
+                <br>
+                <p style="white-space: pre-line;font-size:18px; ">
+                ${res_cat.content}</p>
+                <br>
+                <br>
+                ${process.env.FRONT_BASE_URL + "/events"}
+                <br>
+                `,
+              };
+
+              //Send Mail
+              transporter.sendMail(mailOptions, function (error, info) {
+                if (error) return console.log("error when sent emails", error);
+
+                console.log("emails sent");
+              });
+            });
+          });
+      })
+      .catch((err) => {
+        mres.status(500).json({ message: err });
+      });
+
+  } catch (error) {
+    console.log(error);
+    mres.sendStatus(500)
+  }
+
+  // if (mreq.file != undefined)
+  //   mreq.body.article_img = mreq.file.path
+  //     .replaceAll("\\", "/")
+  //     .replace("public", process.env.BASE_URL);
 };
 
 const events_get = (mreq, mres) => {
   //General
   const { page = 1, limit = 10 } = mreq.query;
 
-  Event.find().sort({date: -1})
+  Event.find()
+    .sort({ date: -1 })
     .limit(limit)
     .skip((page - 1) * limit)
     .then(async (events) => {
@@ -155,6 +159,7 @@ const events_get = (mreq, mres) => {
 
 //Helper Function
 
+//TODO: remove this line when you make images get saved in mongo
 function deleteFile(path, mres) {
   if (path != undefined)
     fileSys.unlink(path, (err) => {
@@ -164,25 +169,14 @@ function deleteFile(path, mres) {
     });
 }
 
-const events_post_subscripe = (mreq, mres) => {
+const events_post_subscripe = async (mreq, mres) => {
   let email = mreq.body.email;
-  let subscripersList = new Set([]);
-  try {
-    subscripersList = new Set(
-      JSON.parse(fileSys.readFileSync("utils/subscripersList.json"))
-    );
-  } catch (erro) {
-    console.log(erro, "subs", subscripersList);
-  }
-
-  subscripersList.add(email);
-
-  fileSys.writeFileSync(
-    "utils/subscripersList.json",
-    JSON.stringify(Array.from(subscripersList))
-  );
-
-  mres.sendStatus(200);
+  Util.updateOne({}, { $addToSet: { subscripersList: email } }).exec(function (
+    err
+  ) {
+    if (err) mres.sendStatus(400);
+    mres.sendStatus(200);
+  });
 };
 
 module.exports = {

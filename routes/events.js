@@ -11,7 +11,6 @@ router
   .put(
     authToken,
     authorized("instructor", ["Supervisor", "Admin"]),
-    upload,
     eventController.events_put_id
   )
   .delete(
@@ -20,12 +19,12 @@ router
     eventController.events_delete_id
   );
 
+  
 router
   .route("")
   .post(
     authToken,
     authorized("instructor", ["Supervisor", "Admin"]),
-    upload,
     eventController.events_post
   )
   .get(eventController.events_get);
