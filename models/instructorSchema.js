@@ -20,11 +20,19 @@ const instructorSchema = new Schema({
   started_at: {type: Date, default: Date.now},
   is_available: {type: Boolean,default: true},
   in_session: {type: Boolean,default: false},
-  programs: {type: [String], default: ["Memorizing"], enum: ["Memorizing", "Recitation", "Noor Bayan"]},
   prefs: {
     working_hours: [[Number]],
     working_days: [Number],
   },
+  busy: {
+    "0":[],
+    "1":[],
+    "2":[],
+    "3":[],
+    "4":[],
+    "5":[],
+    "6":[],
+  }
 });
 
 const Instructor = new mongoose.model("Instructor", instructorSchema);
