@@ -29,6 +29,7 @@ router
   )
   .get(eventController.events_get);
 
-router.route("/subscripe").post(eventController.events_post_subscripe);
+router.route("/subscripe/:email").get(eventController.events_get_subscripe);
+router.route("/subscripe_request").post(eventController.events_post_subscripe_request);
 
 module.exports = router;

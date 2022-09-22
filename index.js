@@ -18,8 +18,8 @@ var corsOptions = {
 app.use(express.static("public"));
 app.use(cors(corsOptions));
 app.use(logger("dev"));
-app.use(express.json({limit: '50mb'}));
-app.use(express.urlencoded({ limit: '50mb',extended: true }));
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
 // const PORT = process.env.PORT || 5000;
 // const HOST = "0.0.0.0";
@@ -85,14 +85,19 @@ const createRoom = (room) => {
     .catch((err) => console.error("error:" + err));
 };
 
-app.get("/video-call/:id", async function (req, res) {
+app.post("/video-call/:id", async function (req, res) {
   const roomId = req.params.id;
+  const role = req.body.role;
 
   const room = await getRoom(roomId);
   if (room == undefined)
     return res.status(400).json({ message: "Room id is empty" });
 
   if (room.error) {
+    if (role !== "instructor")
+      return res
+        .status(400)
+        .json({ message: "Not authorized to create a new room" });
     const newRoom = await createRoom(roomId);
     res.status(200).send(newRoom);
   } else {

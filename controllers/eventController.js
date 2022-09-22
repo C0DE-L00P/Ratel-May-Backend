@@ -169,15 +169,59 @@ function deleteFile(path, mres) {
     });
 }
 
-const events_post_subscripe = async (mreq, mres) => {
-  let email = mreq.body.email;
-  Util.updateOne({}, { $addToSet: { subscripersList: email } }).exec(function (
-    err
-  ) {
-    if (err) mres.sendStatus(400);
+const events_get_subscripe = async (mreq, mres) => {
+  let email = mreq.params.email
+  Util.updateOne({}, { $addToSet: { subscripersList: email } }).exec();
+  mres.status(200).redirect(`${process.env.FRONT_BASE_URL}/home`);
+}
+
+const events_post_subscripe_request = async (mreq, mres) => {
+  // send Mail for him to confirm
+  MailingConfirmationMessage(mreq,mres)
+}
+
+function MailingConfirmationMessage(mreq, mres) {
+  //Sending an email with verification code
+
+  var transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: process.env.EMAIL,
+      pass: process.env.MAIL_APP_PASS,
+    },
+  });
+
+
+  //Mail Format
+
+  var mailOptions = {
+    from: process.env.EMAIL,
+    to: mreq.body.email,
+    subject: `Keep in touch`,
+    html: `<div style="font-size:16px;line-height: 1.25rem; direction: ltr;"> 
+      We received a request to make your email in touch with our latest events and posts.
+    <br>
+      To prevent any spams, we want to make sure that was you. Please, click the button below to confirm.
+    <br>
+    <a href="${process.env.BASE_URL}/api/events/subscripe/${mreq.body.email}">
+    <button style="font-weight:500; font-size:24px; padding: 12px;margin: 16px; border-radius: 8px; background-color: #157347; color: white"; outline: none;>
+    Confirm </button>
+    </a>
+    <br>
+    <br>
+    Thanks for helping us.
+    <br>
+    The Ratel May Team</div>`,
+  };
+
+  //Send Mail
+
+  transporter.sendMail(mailOptions, function (error, info) {
+    if (error) return mres.status(500).json({ message: error });
     mres.sendStatus(200);
   });
-};
+}
+
 
 module.exports = {
   events_get_id,
@@ -185,5 +229,6 @@ module.exports = {
   events_delete_id,
   events_post,
   events_get,
-  events_post_subscripe,
+  events_get_subscripe,
+  events_post_subscripe_request
 };
