@@ -13,7 +13,7 @@ const instructors_get_id = async (mreq, mres) => {
       name: 1,
       email: 1,
       _id: 1,
-      //has_whatsapp: 1,
+      busy: 1,
       mobile: 1,
     })
     .populate("sessions", {
