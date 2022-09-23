@@ -33,6 +33,7 @@ const sessionSchema = new Schema({
       student: { type: Schema.Types.ObjectId, ref: "Student", unique: true},
       previously_eval: Number,
       current_eval: Number,
+      total_eval: Number,
       notes: String,
     },
   ],

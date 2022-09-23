@@ -153,7 +153,7 @@ const sessions_get = async (mreq, mres) => {
         is_available: 1,
       })
       .then(async (cats) => {
-        const count = await Session.countDocuments({});
+        const count = await Session.countDocuments({ members_with_access: new ObjectId(que)});
         mres.json({ data: cats, count });
       })
       .catch((err) => mres.status(404).json({ message: err.message }));

@@ -43,6 +43,15 @@ const studentSchema = new Schema({
   started_from_surah: String,
   reached_surah: String,
   whatsapp_number: String,
+  busy: {
+    "0":[],
+    "1":[],
+    "2":[],
+    "3":[],
+    "4":[],
+    "5":[],
+    "6":[],
+  },
   started_in: {
     type: Date,
     default: function () {
