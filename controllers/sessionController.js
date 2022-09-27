@@ -30,7 +30,7 @@ const sessions_get_id = (mreq, mres) => {
 };
 
 const sessions_put_id = (mreq, mres) => {
-  console.log("BODY", mreq.body);
+
   if ("is_live" in mreq.body && !mreq.body.is_live) {
     //Don't accept any more attendants
     delete mreq.body.attendants;
@@ -60,7 +60,6 @@ const sessions_put_id = (mreq, mres) => {
   delete mreq.body.attendants;
   delete mreq.body.evaluations;
 
-  // "evaluations.student": { $ne: temp.ev?.student }
   Session.findOneAndUpdate(
     { _id: mreq.params.id, "evaluations.student": { $ne: temp.ev?.student } },
     {
@@ -71,8 +70,6 @@ const sessions_put_id = (mreq, mres) => {
     { new: true },
     function (err, result) {
       if (err) return mres.status(500).json({ message: err });
-      // console.log('RESULT',result)
-      // result.test_evs.set('github','dsvdsv')
       mres.status(200).json(result);
     }
   );
@@ -130,6 +127,8 @@ const sessions_get = async (mreq, mres) => {
   if (mreq.query.user_id != undefined || mreq.query.userId != undefined) {
     //Query sessions for this specific user
     let que = mreq.query.user_id || mreq.query.userId;
+    if (que.length != 12 && que.length != 24) return mres.sendStatus(400);
+      
     var ObjectId = await require("mongoose").Types.ObjectId;
 
     Session.find({ members_with_access: new ObjectId(que) })
@@ -153,7 +152,9 @@ const sessions_get = async (mreq, mres) => {
         is_available: 1,
       })
       .then(async (cats) => {
-        const count = await Session.countDocuments({ members_with_access: new ObjectId(que)});
+        const count = await Session.countDocuments({
+          members_with_access: new ObjectId(que),
+        });
         mres.json({ data: cats, count });
       })
       .catch((err) => mres.status(404).json({ message: err.message }));

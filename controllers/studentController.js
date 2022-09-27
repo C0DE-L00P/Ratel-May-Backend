@@ -3,6 +3,7 @@ const bcrypt = require("bcrypt");
 const fileSys = require("fs");
 const fetch = require("node-fetch");
 const Util = require("../models/utilSchema");
+const Instructor = require("../models/instructorSchema");
 require("dotenv").config();
 
 // -------------------- IDS
@@ -43,8 +44,24 @@ const students_delete_id = (mreq, mres) => {
 
   Student.findByIdAndDelete(mreq.params.id, function (err) {
     if (err)
-      mres.status(404).json({ message: "No student found with such id" });
-    else mres.sendStatus(200);
+      return mres
+        .status(404)
+        .json({ message: "No student found with such id" });
+
+    //Delete student from the instructor he has
+    fetch(`${process.env.BASE_URL}/api/instructors/${mreq.body.instructorID}`, {
+      method: PUT,
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        is_removing_student: true,
+        students: mreq.params.id,
+      }),
+    })
+
+    mres.sendStatus(200);
   });
 };
 
@@ -164,13 +181,15 @@ async function handlePasswordChange(mreq, mres, email, pin) {
       if (!(emailKey in pinsList)) return mres.sendStatus(401);
 
       if (pinsList[emailKey].pin == pin) {
-
         //check the pin one more time
         mreq.body.password = await bcrypt.hash(mreq.body.password, 10);
         let resu = await Util.findOne().lean();
         pinsList = resu.pinsList;
         delete pinsList[emailKey];
-        Util.updateOne({_id: "632053d485bfa440b6b689db"}, { $set: { pinsList: pinsList } }).exec();
+        Util.updateOne(
+          { _id: "632053d485bfa440b6b689db" },
+          { $set: { pinsList: pinsList } }
+        ).exec();
 
         findAndUpdate(mreq, mres);
       } else mres.status(409).json({ message: "PIN is incorrect" });

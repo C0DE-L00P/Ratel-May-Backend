@@ -13,7 +13,7 @@ const instructors_get_id = async (mreq, mres) => {
       name: 1,
       email: 1,
       _id: 1,
-      busy: 1,
+      // busy: 1,
       mobile: 1,
     })
     .populate("sessions", {
@@ -58,8 +58,8 @@ const instructors_delete_id = (mreq, mres) => {
     return mres.sendStatus(400);
 
   Instructor.findByIdAndDelete(mreq.params.id, function (err) {
-    if (err) mres.status(404).json({ message: err });
-    else mres.sendStatus(200);
+    if (err) return mres.status(404).json({ message: err });
+    mres.sendStatus(200);
   });
 };
 
@@ -166,7 +166,6 @@ async function handlePasswordChange(mreq, mres, email, pin) {
             .status(401)
             .json({ message: "Credentials are incorrect" });
         mreq.body.password = await bcrypt.hash(mreq.body.password, 10);
-        console.log("1 pass", mreq.body.password);
         findAndUpdate(mreq, mres);
       }
     );
