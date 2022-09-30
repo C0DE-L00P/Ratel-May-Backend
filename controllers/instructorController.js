@@ -1,6 +1,7 @@
 const Instructor = require("../models/instructorSchema");
 const bcrypt = require("bcrypt");
 const fileSys = require("fs");
+const fetch = require("node-fetch");
 
 // -------------------- IDS
 
@@ -60,6 +61,22 @@ const instructors_delete_id = (mreq, mres) => {
   Instructor.findByIdAndDelete(mreq.params.id, function (err) {
     if (err) return mres.status(404).json({ message: err });
     mres.sendStatus(200);
+
+    let studentsIDs = mreq.body.studentsIDs;
+
+    for (id of studentsIDs) {
+      fetch(`${process.env.BASE_URL}/api/students/${id}`, {
+        method: "PUT",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          subscription_state: "Pending"
+        }),
+      });
+    }
+
   });
 };
 
