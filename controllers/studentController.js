@@ -50,7 +50,7 @@ const students_delete_id = (mreq, mres) => {
 
     //Delete student from the instructor he has
     fetch(`${process.env.BASE_URL}/api/instructors/${mreq.body.instructorID}`, {
-      method: PUT,
+      method: 'PUT',
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
