@@ -78,17 +78,23 @@ const user_post_request_pin = async (mreq, mres) => {
   // check If Email is valid
 
   let field = "instructors";
-  let res_user = await Instructor.findOne({ email: mreq.body.email });
 
-  if (!res_user) {
-    res_user = await Student.findOne({ email: mreq.body.email });
-    field = "students";
+  if (!("rpin" in mreq.body && mreq.body.rpin)) {
+    //MEANS PIN would be used to recover password
+
+    let res_user = await Instructor.findOne({ email: mreq.body.email });
+
+    if (!res_user) {
+      res_user = await Student.findOne({ email: mreq.body.email });
+      field = "students";
+    }
+
+    if (!res_user)
+      return mres.status(404).json({
+        message:
+          "Auth Problem: No instructor nor student with such credentials",
+      });
   }
-
-  if (!res_user)
-    return mres.status(404).json({
-      message: "Auth Problem: No instructor nor student with such credentials",
-    });
 
   MailingPIN(mreq, mres, field);
 };
@@ -98,48 +104,49 @@ const user_post_confirm_pin = async (mreq, mres) => {
   let pin = mreq.body.pin;
 
   let pinsList = {};
-  
+
   Util.findOne()
     .lean()
     .exec(async function (err, doc) {
-      pinsList = doc.pinsList
+      pinsList = doc.pinsList;
 
       let emailKey = mreq.body.email.replaceAll(".", "#");
 
       if (!(emailKey in pinsList)) return mres.sendStatus(401);
-    
+
       pinsList[emailKey].trials == 5
         ? delete pinsList[emailKey]
         : (pinsList[emailKey].trials = pinsList[emailKey].trials + 1);
-    
+
       Util.updateOne({ _id: utilsID }, { $set: { pinsList: pinsList } }).exec();
-    
+
       if (pinsList[emailKey].pin != pin && pinsList[emailKey].pin)
         return mres.status(403).json({ message: "PIN is incorrect" });
-    
+
       //When pin is identical to the one sent
       //Check for the user data in the database to give him the id
-    
+
       if (!("rpin" in mreq.body)) {
         //means that he is not registering for the first time
-        let user = await Instructor.findOne({ email: email }).select({ _id: 1 });
-    
+        let user = await Instructor.findOne({ email: email }).select({
+          _id: 1,
+        });
+
         if (!user)
           user = await Student.findOne({ email: email }).select({ _id: 1 });
-    
+
         if (!user)
           return mres.status(404).json({
             message:
               "Auth Problem: No instructor nor student with such credentials",
           });
-    
+
         //OK now send his id back to him to put the newPass later on
         mres
           .status(200)
           .json({ _id: user._id, field: pinsList[emailKey].searchField });
       } else mres.sendStatus(200);
-    })
-
+    });
 };
 
 //Helper Function

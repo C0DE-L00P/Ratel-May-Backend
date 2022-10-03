@@ -6,7 +6,7 @@ const authenticateToken = require("../middlewares/authToken.js");
 
 router.route("/:id")
 .get(instructorController.instructors_get_id)
-.put(authenticateToken,authorized("instructor","Admin"),instructorController.instructors_put_id)
+.put(authenticateToken,instructorController.instructors_put_id)
 .delete(authenticateToken,authorized("instructor","Admin"),instructorController.instructors_delete_id)
 
 router.route("")

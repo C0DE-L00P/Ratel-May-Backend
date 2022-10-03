@@ -14,7 +14,6 @@ const instructors_get_id = async (mreq, mres) => {
       name: 1,
       email: 1,
       _id: 1,
-      // busy: 1,
       mobile: 1,
     })
     .populate("sessions", {
@@ -35,10 +34,9 @@ const instructors_get_id = async (mreq, mres) => {
       problems: 1,
     })
     .select({ password: 0 });
-  if (res == undefined || res == null) {
-    mres.status(404).json({ message: "No instructor with such id" });
-    return;
-  }
+    
+  if (res == undefined || res == null)
+    return mres.status(404).json({ message: "No instructor with such id" });
 
   res ? mres.json(res) : mres.sendStatus(404);
 };
@@ -58,25 +56,25 @@ const instructors_delete_id = (mreq, mres) => {
   if (mreq.params.id.length != 12 && mreq.params.id.length != 24)
     return mres.sendStatus(400);
 
+  let studentsIDs = mreq.body.studentsIDs ?? [];
+
   Instructor.findByIdAndDelete(mreq.params.id, function (err) {
     if (err) return mres.status(404).json({ message: err });
     mres.sendStatus(200);
 
-    let studentsIDs = mreq.body.studentsIDs;
-
-    for (id of studentsIDs) {
-      fetch(`${process.env.BASE_URL}/api/students/${id}`, {
-        method: "PUT",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          subscription_state: "Pending"
-        }),
-      });
-    }
-
+    if (studentsIDs.length !== 0)
+      for (id of studentsIDs) {
+        fetch(`${process.env.BASE_URL}/api/students/${id}`, {
+          method: "PUT",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            subscription_state: "Pending",
+          }),
+        });
+      }
   });
 };
 

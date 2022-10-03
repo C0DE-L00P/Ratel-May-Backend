@@ -1,7 +1,6 @@
 const { default: mongoose } = require("mongoose");
 const Schema = mongoose.Schema;
 
-//TODO: add other programs support to this schema ex: Noor Bayan and multiprogram subscriptions
 const studentSchema = new Schema({
   name: { type: String, required: true },
   age: { type: Number, required: [true, "You must put an age"] },
@@ -31,7 +30,6 @@ const studentSchema = new Schema({
   program_prefs: {
     type: {
       type: String,
-      enum: ["Memorizing", "Recitation", "Noor Bayan"],
       default: "Memorizing",
     },
     sessions_in_week: Number,

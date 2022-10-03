@@ -3,7 +3,6 @@ const router = express.Router();
 const eventController = require("../controllers/eventController.js");
 const authToken = require("../middlewares/authToken");
 const authorized = require("../middlewares/authorized");
-const upload = require("../middlewares/upload");
 
 router
   .route("/:id")

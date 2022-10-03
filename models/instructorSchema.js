@@ -35,7 +35,6 @@ const instructorSchema = new Schema({
     working_days: [Number],
   },
   plan_doc: { type: String },
-  helper: {type: [String]},
   busy: {
     0: [],
     1: [],

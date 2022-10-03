@@ -161,8 +161,6 @@ const sessions_get = async (mreq, mres) => {
   } else {
     // General
 
-    //TODO: must be authorized to access all sessions
-
     Session.find()
       .sort({ created_at: -1 })
       .limit(limit)

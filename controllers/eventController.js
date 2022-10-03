@@ -87,8 +87,6 @@ const events_post = async (mreq, mres) => {
         });
 
         //GET THE LIST OF SUBSCRIPERS to send mails to
-        //TODO: check if this is working as it should
-
         Util.findOne()
           .lean()
           .then(({ subscripersList }) => {
@@ -159,7 +157,6 @@ const events_get = (mreq, mres) => {
 
 //Helper Function
 
-//TODO: remove this line when you make images get saved in mongo
 function deleteFile(path, mres) {
   if (path != undefined)
     fileSys.unlink(path, (err) => {

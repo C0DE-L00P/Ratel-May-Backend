@@ -73,7 +73,7 @@ const createRoom = (room) => {
         start_video_off: true,
         start_audio_off: false,
         enable_network_ui: true,
-        enable_prejoin_ui: false,
+        enable_prejoin_ui: true,
         lang: "en",
       },
     }),

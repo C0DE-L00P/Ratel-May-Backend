@@ -6,11 +6,11 @@ const authenticateToken = require("../middlewares/authToken.js");
 
 router.route("/:id")
 .get(sessionController.sessions_get_id)
-.put(authenticateToken,authorized("instructor",["None","Supervisor","Admin"]),sessionController.sessions_put_id)
+.put(authenticateToken,sessionController.sessions_put_id)
 .delete(authenticateToken,authorized("instructor",["None","Supervisor","Admin"]),sessionController.sessions_delete_id)
 
 router.route("")
-.post(sessionController.sessions_post)
+.post(authenticateToken,authorized("instructor",["None","Supervisor","Admin"]),sessionController.sessions_post)
 .get(sessionController.sessions_get);
 
 module.exports = router;
