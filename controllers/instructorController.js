@@ -72,6 +72,7 @@ const instructors_delete_id = (mreq, mres) => {
           },
           body: JSON.stringify({
             subscription_state: "Pending",
+            instructor: null
           }),
         });
       }
