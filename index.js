@@ -10,13 +10,13 @@ const Util = require("./models/utilSchema.js");
 
 // app.use(fileupload({useTempFiles: true}))
 
-var corsOptions = {
-  origin: process.env.FRONT_BASE_URL,
-  optionsSuccessStatus: 200,
-};
+// var corsOptions = {
+//   origin: process.env.FRONT_BASE_URL,
+//   optionsSuccessStatus: 200,
+// };
 
 app.use(express.static("public"));
-app.use(cors(corsOptions));
+app.use(cors());
 app.use(logger("dev"));
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
