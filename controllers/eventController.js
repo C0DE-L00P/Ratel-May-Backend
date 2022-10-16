@@ -60,6 +60,7 @@ const events_delete_id = (mreq, mres) => {
 
 const events_post = async (mreq, mres) => {
   //Save the data in the database
+  console.log('event',mreq.body)
 
   try {
     const fileStr = mreq.body.article_img;
