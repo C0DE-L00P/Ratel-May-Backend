@@ -201,7 +201,7 @@ function MailingConfirmationMessage(mreq, mres) {
     <br>
       To prevent any spams, we want to make sure that was you. Please, click the button below to confirm.
     <br>
-    <a href="${process.env.BASE_URL}/api/events/subscripe/${mreq.body.email}">
+    <a href="${process.env.SUB_BASE_URL??process.env.BASE_URL}/api/events/subscripe/${mreq.body.email}">
     <button style="font-weight:500; font-size:24px; padding: 12px;margin: 16px; border-radius: 8px; background-color: #157347; color: white"; outline: none;>
     Confirm </button>
     </a>
