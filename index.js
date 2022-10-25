@@ -11,7 +11,7 @@ const Util = require("./models/utilSchema.js");
 // app.use(fileupload({useTempFiles: true}))
 
 var corsOptions = {
-  origin: process.env.FRONT_BASE_URL,
+  origin: '*',
   optionsSuccessStatus: 200,
   methods: "GET,PUT,POST,DELETE"
 };
