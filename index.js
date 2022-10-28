@@ -7,17 +7,10 @@ const logger = require("morgan");
 const cors = require("cors");
 const Util = require("./models/utilSchema.js");
 // const fileupload = require('express-fileupload');
-
 // app.use(fileupload({useTempFiles: true}))
 
-var corsOptions = {
-  origin: '*',
-  optionsSuccessStatus: 200,
-  methods: "GET,PUT,POST,DELETE"
-};
-
 app.use(express.static("public"));
-app.use(cors(corsOptions));
+app.use(cors({origin: '*'}));
 app.use(logger("dev"));
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
