@@ -5,8 +5,10 @@ const authToken = require("../middlewares/authToken");
 const authorized = require("../middlewares/authorized");
 
 router
-  .route("/:id")
-  .get(eventController.events_get_id)
+  .route("/:slug")
+  .get(eventController.events_get_slug);
+
+router.route('/:id')
   .put(
     authToken,
     authorized("instructor", ["Supervisor", "Admin"]),
@@ -18,15 +20,15 @@ router
     eventController.events_delete_id
   );
 
-  
+
 router
   .route("")
+  .get(eventController.events_get)
   .post(
     authToken,
     authorized("instructor", ["Supervisor", "Admin"]),
     eventController.events_post
-  )
-  .get(eventController.events_get);
+  );
 
 router.route("/subscripe/:email").get(eventController.events_get_subscripe);
 router.route("/subscripe_request").post(eventController.events_post_subscripe_request);

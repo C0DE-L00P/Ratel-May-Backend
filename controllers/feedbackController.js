@@ -1,3 +1,4 @@
+const sanitize = require('mongo-sanitize');
 const Feedback = require("../models/feedbackSchema");
 
 // -------------------- IDS
@@ -44,7 +45,7 @@ const feedbacks_get_id = (mreq, mres) => {
 
 const feedbacks_post = (mreq, mres) => {
   //Save the data in the database
-  const feedback = new Feedback(mreq.body);
+  const feedback = new Feedback(sanitize(mreq.body));
 
   feedback
     .save()

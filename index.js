@@ -6,6 +6,8 @@ const app = express();
 const logger = require("morgan");
 const cors = require("cors");
 const Util = require("./models/utilSchema.js");
+const { cloudinary } = require('./utils/cloudinary.js')
+
 // const fileupload = require('express-fileupload');
 // app.use(fileupload({useTempFiles: true}))
 
@@ -103,6 +105,7 @@ app.get("/video-api-url", function (req, res) {
   res.json({ url: process.env.DAILY_CLIENT_URL });
 });
 
+
 //Routes
 
 app.use("/api/sessions", require("./routes/sessions.js"));
@@ -112,6 +115,23 @@ app.use("/api/feedbacks", require("./routes/feedbacks.js"));
 app.use("/api/contacts", require("./routes/contacts.js"));
 app.use("/api/events", require("./routes/events.js"));
 app.use("/api/auth", require("./routes/auth.js"));
+
+
+// To upload images coming from ckeditor to cloudinary
+
+const multipart = require('connect-multiparty');
+const multipartMiddleware = multipart();
+
+
+app.post('/api/upload-img', multipartMiddleware, async function(mreq, mres) {
+  const {secure_url} = await cloudinary.uploader.upload(mreq.files.uploadImg.path, {
+    folder: 'ckeditor',
+  });
+  mres.status(201).send(secure_url);
+});
+
+//TODO handle express errors
+
 app.get("*", (mreq, mres) => mres.sendStatus(404));
 
 const port = process.env.PORT || 5000;

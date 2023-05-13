@@ -1,14 +1,16 @@
-const Event = require("../models/eventSchema");
-const fileSys = require("fs");
 require("dotenv").config();
 const nodemailer = require("nodemailer");
+const sanitize = require('mongo-sanitize');
+
+const fileSys = require("fs");
+const Event = require("../models/eventSchema");
 const Util = require("../models/utilSchema");
 const { cloudinary } = require("../utils/cloudinary");
 
 // -------------------- IDS
 
-const events_get_id = (mreq, mres) => {
-  Event.findById(mreq.params.id)
+const events_get_slug = (mreq, mres) => {
+  Event.findOne({ slug: mreq.params.slug })
     .then((res) => (res ? mres.json(res) : mres.sendStatus(404)))
     .catch(() => mres.sendStatus(404));
 };
@@ -16,7 +18,7 @@ const events_get_id = (mreq, mres) => {
 const events_put_id = (mreq, mres) => {
   Event.findByIdAndUpdate(
     mreq.params.id,
-    mreq.body,
+    sanitize(mreq.body),
     { new: true },
     function (err, docs) {
       if (err) {
@@ -69,12 +71,14 @@ const events_post = async (mreq, mres) => {
     });
     mreq.body.article_img = uploadedResponse.url
     
-    const event = new Event(mreq.body);
+    const event = new Event(sanitize(mreq.body));
 
     event
       .save()
       .then(async (res_cat) => {
         
+        if(process.env.NODE_ENV == 'development') return
+
         //---------------------------------
         let dateString = res_cat.date.toString();
         let dateEditted = dateString.split("T")[0];
@@ -110,10 +114,11 @@ const events_post = async (mreq, mres) => {
                       <p style="font-size:12px; color: grey;">${dateEditted}</p>
                 <br>
                 <p style="white-space: pre-line;font-size:18px; ">
-                ${res_cat.content}</p>
+                ${res_cat.summary}</p>
                 <br>
                 <br>
-                ${process.env.FRONT_BASE_URL + "/events"}
+                اعرف اكثر
+                ${process.env.FRONT_BASE_URL + "/events/"+ res_cat.slug}
                 <br>
                 `,
               };
@@ -222,7 +227,7 @@ function MailingConfirmationMessage(mreq, mres) {
 
 
 module.exports = {
-  events_get_id,
+  events_get_slug,
   events_put_id,
   events_delete_id,
   events_post,
