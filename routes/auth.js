@@ -2,8 +2,8 @@ require("dotenv").config();
 const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcrypt");
-const nodemailer = require("nodemailer");
 const jwt = require("jsonwebtoken");
+const Sib = require('sib-api-v3-sdk');
 
 //Controllers
 
@@ -151,59 +151,52 @@ const user_post_confirm_pin = async (mreq, mres) => {
 
 //Helper Function
 
-function MailingPIN(mreq, mres, field) {
+async function MailingPIN(mreq, mres, field) {
+
   //Sending an email with verification code
 
-  var transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      user: process.env.EMAIL,
-      pass: process.env.MAIL_APP_PASS,
-    },
-  });
-
   let PIN = Math.round(Math.random() * 1000000);
+  let isRegistrationPIN = "rpin" in mreq.body;
 
   //Mail Format
 
-  let isRegistrationPIN = "rpin" in mreq.body;
+  const client = Sib.ApiClient.instance
+  let apiKey = client.authentications['api-key']
+  apiKey.apiKey = process.env.SEND_IN_BLUE_API;
 
-  var mailOptions = {
-    from: process.env.EMAIL,
+  const tranEmailApi = new Sib.TransactionalEmailsApi()
+  const sender = {
+    email: process.env.EMAIL,
+    name: 'رتل معي'
+  }
+
+  let sibStatus = await tranEmailApi.sendTransacEmail({
+    sender,
     to: mreq.body.email,
-    subject: `${
-      isRegistrationPIN ? "Verify your email in Ratel May" : "Here's your PIN"
-    }`,
-    html: `<div style="font-size:16px;line-height: 1.25rem"> ${
-      isRegistrationPIN
-        ? "You need to verify that this email belongs to you to complete registration"
-        : "We received a request to reset password in your Ratel May Account"
-    }.
-    <br>
-    <br>
-    <span style="font-weight:700; font-size:40px;">
-    ${PIN}</span>
-    <br>
-    Enter this code to complete the ${
-      isRegistrationPIN ? "verification" : "reset"
-    }.
-    <br>
-    <br>
-    Thanks for helping us ${
-      isRegistrationPIN ? "" : "keep your account secure"
-    }.
-    <br>
-    The Ratel May Team</div>`,
-  };
-
-  //Send Mail
-
-  transporter.sendMail(mailOptions, function (error, info) {
-    if (error) return mres.status(500).json({ message: error });
-
-    SavePINinStorage(mreq, PIN, field);
-    mres.sendStatus(200);
+    subject: `${isRegistrationPIN ? "Verify your email in Ratel May" : "Here's your PIN"}`,
+    htmlContent: `<div style="font-size:16px;line-height: 1.25rem"> ${isRegistrationPIN
+      ? "You need to verify that this email belongs to you to complete registration"
+      : "We received a request to reset password in your Ratel May Account"
+      }.
+  <br>
+  <br>
+  <span style="font-weight:700; font-size:40px;">
+  ${PIN}</span>
+  <br>
+  Enter this code to complete the ${isRegistrationPIN ? "verification" : "reset"
+      }.
+  <br>
+  <br>
+  Thanks for helping us ${isRegistrationPIN ? "" : "keep your account secure"
+      }.
+  <br>
+  The Ratel May Team</div>`,
   });
+
+  // if (sibStatus != 200) return mres.sendStatus(500);
+
+  // SavePINinStorage(mreq, PIN, field);
+  mres.sendStatus(200);
 }
 
 const utilsID = "632053d485bfa440b6b689db"; //this is the only ID that utils would be stored in

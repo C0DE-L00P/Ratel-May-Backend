@@ -8,11 +8,19 @@ const cors = require("cors");
 const Util = require("./models/utilSchema.js");
 const { cloudinary } = require('./utils/cloudinary.js')
 
-// const fileupload = require('express-fileupload');
-// app.use(fileupload({useTempFiles: true}))
+var whitelist = ['http://localhost:3000', 'https://ratelmay.com', 'https://ratel-ma3y-amcademy-app.vercel.app/']
+var corsOptions = {
+  origin: function (origin, callback) {
+    if (whitelist.indexOf(origin) !== -1) {
+      callback(null, true)
+    } else {
+      callback(new Error('Not allowed by CORS'))
+    }
+  }
+}
 
 app.use(express.static("public"));
-app.use(cors({origin: '*'}));
+app.use(cors());
 app.use(logger("dev"));
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
@@ -37,12 +45,13 @@ mongoose
 
 //Video Call API Setup
 
-const API_KEY = process.env.DAILY_API_KEY;
+const arrApi = process.env.DAILY_API_KEY.split(',')
+const DAILY_API_KEY = arrApi[(new Date(Date.now())).getUTCDate()];
 
 const headers = {
   Accept: "application/json",
   "Content-Type": "application/json",
-  Authorization: "Bearer " + API_KEY,
+  Authorization: "Bearer " + DAILY_API_KEY,
 };
 
 const getRoom = (room) => {
@@ -81,28 +90,32 @@ const createRoom = (room) => {
     .catch((err) => console.error("error:" + err));
 };
 
-app.post("/video-call/:id", async function (req, res) {
+app.post("/video-call/:id", async function (req, res, next) {
   const roomId = req.params.id;
   const role = req.body.role;
 
-  const room = await getRoom(roomId);
-  if (room == undefined)
-    return res.status(400).json({ message: "Room id is empty" });
+  try {
+    //Check if room is already created
+    const room = await getRoom(roomId);
+    if (room == undefined) return res.status(400).json({ message: "Room id is empty" });
+    if (!room.error) return res.status(200).send(room);
 
-  if (room.error) {
     if (role !== "instructor")
       return res
         .status(400)
         .json({ message: "Not authorized to create a new room" });
+
     const newRoom = await createRoom(roomId);
-    res.status(200).send(newRoom);
-  } else {
-    res.status(200).send(room);
+
+    res.status(200).json(newRoom);
+  } catch (error) {
+    next(error)
   }
 });
 
+const arrUrl = process.env.DAILY_CLIENT_URL.split(',');
 app.get("/video-api-url", function (req, res) {
-  res.json({ url: process.env.DAILY_CLIENT_URL });
+  res.json({ url: arrUrl[(new Date(Date.now())).getUTCDate()] });
 });
 
 
@@ -122,17 +135,26 @@ app.use("/api/auth", require("./routes/auth.js"));
 const multipart = require('connect-multiparty');
 const multipartMiddleware = multipart();
 
-
-app.post('/api/upload-img', multipartMiddleware, async function(mreq, mres) {
-  const {secure_url} = await cloudinary.uploader.upload(mreq.files.uploadImg.path, {
+app.post('/api/upload-img', multipartMiddleware, async function (mreq, mres) {
+  const { secure_url } = await cloudinary.uploader.upload(mreq.files.uploadImg.path, {
     folder: 'ckeditor',
   });
   mres.status(201).send(secure_url);
 });
 
-//TODO handle express errors
+
+const errorHandler = (error, request, response, next) => {
+  // Error handling middleware functionality
+  console.log(`error ${error.message}`); // log the error
+  const status = error.status || 400;
+  // send back an easily understandable error message to the caller
+  response.status(status).send(error.message);
+}
+
+
 
 app.get("*", (mreq, mres) => mres.sendStatus(404));
+app.use(errorHandler);
 
 const port = process.env.PORT || 5000;
 app.listen(port, () => console.log(`Server Running on port ${port}`));
