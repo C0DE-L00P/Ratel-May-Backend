@@ -118,7 +118,6 @@ app.get("/video-api-url", function (req, res) {
   res.json({ url: arrUrl[(new Date(Date.now())).getUTCDate()] });
 });
 
-
 //Routes
 
 app.use("/api/sessions", require("./routes/sessions.js"));
