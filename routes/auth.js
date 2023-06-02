@@ -172,7 +172,7 @@ async function MailingPIN(mreq, mres, field) {
 
   let sibStatus = await tranEmailApi.sendTransacEmail({
     sender,
-    to: mreq.body.email,
+    to: [{email: mreq.body.email}],
     subject: `${isRegistrationPIN ? "Verify your email in Ratel May" : "Here's your PIN"}`,
     htmlContent: `<div style="font-size:16px;line-height: 1.25rem"> ${isRegistrationPIN
       ? "You need to verify that this email belongs to you to complete registration"
@@ -195,8 +195,12 @@ async function MailingPIN(mreq, mres, field) {
 
   // if (sibStatus != 200) return mres.sendStatus(500);
 
-  // SavePINinStorage(mreq, PIN, field);
-  mres.sendStatus(200);
+  try {
+    SavePINinStorage(mreq, PIN, field);
+    mres.sendStatus(200);
+  } catch (error) {
+    mres.status(504).json({message: error, success: false})
+  }
 }
 
 const utilsID = "632053d485bfa440b6b689db"; //this is the only ID that utils would be stored in

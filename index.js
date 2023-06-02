@@ -19,6 +19,7 @@ var corsOptions = {
   }
 }
 
+
 app.use(express.static("public"));
 app.use(cors());
 app.use(logger("dev"));
@@ -37,9 +38,7 @@ const connectionParams = {
 mongoose
   .connect(url, connectionParams)
   .then(() =>
-    app.listen(process.env.DB_PORT || 1000, async () => {
-      console.log("%c Server started", "color: green;");
-    })
+    app.listen(process.env.DB_PORT || 1000, async () => console.log("%c Server started", "color: green;"))
   )
   .catch((err) => console.error(`Error DB. ${err}`));
 
