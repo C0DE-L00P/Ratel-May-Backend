@@ -35,13 +35,14 @@ const sessions_put_id = (mreq, mres) => {
     //Don't accept any more attendants
     delete mreq.body.attendants;
 
-    //Delete the room
-    let API_KEY = process.env.DAILY_API_KEY;
 
+    //Delete the room
+    const arrApi = process.env.DAILY_API_KEY.split(',')
+    const DAILY_API_KEY = arrApi[(new Date(Date.now())).getUTCDate()];
     let headers = {
       Accept: "application/json",
       "Content-Type": "application/json",
-      Authorization: "Bearer " + API_KEY,
+      Authorization: "Bearer " + DAILY_API_KEY
     };
 
     fetch(`https://api.daily.co/v1/rooms/${mreq.body.room_id}`, {
@@ -87,6 +88,7 @@ const sessions_delete_id = (mreq, mres) => {
 const sessions_post = (mreq, mres) => {
   //Save the data in the database
   const session = new Session(mreq.body);
+  console.log('session', mreq.body)
 
   session
     .save()
@@ -128,7 +130,7 @@ const sessions_get = async (mreq, mres) => {
     //Query sessions for this specific user
     let que = mreq.query.user_id || mreq.query.userId;
     if (que.length != 12 && que.length != 24) return mres.sendStatus(400);
-      
+
     var ObjectId = await require("mongoose").Types.ObjectId;
 
     Session.find({ members_with_access: new ObjectId(que) })

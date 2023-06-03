@@ -99,10 +99,10 @@ app.post("/video-call/:id", async function (req, res, next) {
     if (room == undefined) return res.status(400).json({ message: "Room id is empty" });
     if (!room.error) return res.status(200).send(room);
 
-    if (role !== "instructor")
+    if (role === "student")
       return res
         .status(400)
-        .json({ message: "Not authorized to create a new room" });
+        .json({ message: "Not authorized to create a new room", status: 400});
 
     const newRoom = await createRoom(roomId);
 
@@ -126,6 +126,7 @@ app.use("/api/feedbacks", require("./routes/feedbacks.js"));
 app.use("/api/contacts", require("./routes/contacts.js"));
 app.use("/api/events", require("./routes/events.js"));
 app.use("/api/auth", require("./routes/auth.js"));
+app.post("/api/test", (mreq,mres)=> {mres.sendStatus(200)});
 
 
 // To upload images coming from ckeditor to cloudinary

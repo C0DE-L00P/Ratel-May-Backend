@@ -4,6 +4,7 @@ const Schema = mongoose.Schema;
 const sessionSchema = new Schema({
   room_id: String,
   created_at: { type: Date, default: Date.now },
+  is_running: Boolean,
   start_at: { type: Date },
   ended_at: { type: Date },
   is_exam: {type: Boolean, default: false},
